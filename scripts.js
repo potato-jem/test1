@@ -74,6 +74,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             console.log(data);
             let tokens =[];
             let first_content='';
+            let first_token=0;
             if(chat){
                 //const firstFollow = data.choices[0].message.content.trim();
                 tokens = data.choices[0].logprobs.content[0].top_logprobs;
@@ -82,6 +83,8 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             } else {
                 tokens = Object.entries(data.choices[0].logprobs.top_logprobs[0]);
                 first_content=data.choices[0].text;
+                first_token=tokens.findIndex(subarray=>subarray[0]==data.choices[0].logprobs.tokens[0])
+                data.choices[0].logprobs.tokens[0];
             }
             const tokensArray = [] ;
 
@@ -92,7 +95,9 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                 const lp = Math.exp(tokens[token][1]);
                 const idx_match = tokensArray.findIndex(subArray => subArray[0] === keyt);
                 let content = '';
-                if (token==0){
+                console.log(token);
+                console.log(first_token);
+                if (token==first_token){
                     content=first_content;
                 }
                 if(idx_match>=0){
@@ -115,7 +120,11 @@ document.getElementById('generateButton').addEventListener('click', async () => 
         }
 
         function getFormattedText([key, value,a,b,c,d]){
-            const text = `${key} ${value.toFixed(3)} (${b})`;
+            let extra = ""
+            if (b.length>0){
+                extra=` (${b.trim()})`
+            }
+            const text = `${key} <span class="small">${(value*100).toFixed(1)}${extra}</span>`;
             if(c){
                 return `<span class="highlight1">${text}</span>`;
             }
