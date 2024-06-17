@@ -36,10 +36,10 @@ document.getElementById('generateButton').addEventListener('click', async () => 
     const x = atob('c2stcHJvai0zZDN5MWo5TDRaYVljVG1oTllmNlQzQmxia0ZKZUJNalpUQXZWMnRKM0tYWVA5MkM=');
     const chat_model = 'gpt-3.5-turbo';
     const instruct_model = 'gpt-3.5-turbo-instruct';
-    const maxTokens = document.getElementById('maxTokens').value;//3;
-    const num_return= document.getElementById('num_return').value;//20;
+    const maxTokens = +document.getElementById('maxTokens').value;//3;
+    const num_return= +document.getElementById('num_return').value;//20;
     const prefix= document.getElementById('prefix').value;//"continue this: ";
-    const model2 = document.getElementById('model2').value;// true;
+    const model2 = document.getElementById('model2').value==='true';// true;
 
         async function getResponse(chattext,maxTokens,chat,num_logprobs=num_return,iteration=false){
             let b = {
