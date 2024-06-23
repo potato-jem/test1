@@ -1,31 +1,38 @@
 
-function get2RandomItems(count=2) {
-    const uniqueNumbers = new Set();
+// function get2RandomItems(count=2) {
+//     const uniqueNumbers = new Set();
 
-    while (uniqueNumbers.size < count) {
-        const randomNumber = Math.floor(Math.random() * all_words.length);
-        uniqueNumbers.add(randomNumber);
+//     while (uniqueNumbers.size < count) {
+//         const randomNumber = Math.floor(Math.random() * all_words.length);
+//         uniqueNumbers.add(randomNumber);
+//     }
+//     out=[]
+//     for(const v of uniqueNumbers){out.push(all_words[v])}
+//     return(out)
+// }
+function setRandomWords(min,max) {
+    let minI=all_words[2].findIndex((x)=>x>=min)
+    let maxI=all_words[2].findIndex((x)=>x>max)
+    if(maxI==-1){
+        maxI=all_words[2].length
     }
-    out=[]
-    for(const v of uniqueNumbers){out.push(all_words[v])}
+    const selectedIndex = minI+Math.floor(Math.random() * (maxI-minI));
+
+    out=[all_words[0][selectedIndex],all_words[1][selectedIndex],all_words[2][selectedIndex]]
+    //for(const v of uniqueNumbers){out.push(all_words[v])}
+    document.getElementById('targetWord1').textContent = out[0]
+    document.getElementById('targetWord2').textContent = out[1]
+    document.getElementById('difficulty').textContent = Math.round((out[2]*100))
     return(out)
 }
 // function update
 
-let items = get2RandomItems();
-document.getElementById('targetWord1').textContent = items[0]
-document.getElementById('targetWord2').textContent = items[1]
+setRandomWords(+document.getElementById('minD').value,+document.getElementById('maxD').value);
+
 document.getElementById('refreshWords').addEventListener('click', async () => {
-    items = get2RandomItems(2);
-    document.getElementById('targetWord1').textContent = items[0]
-    document.getElementById('targetWord2').textContent = items[1]
+    setRandomWords(+document.getElementById('minD').value,+document.getElementById('maxD').value);
 });
-document.getElementById('refreshWords1').addEventListener('click', async () => {
-    document.getElementById('targetWord1').textContent = get2RandomItems(1)[0];
-});
-document.getElementById('refreshWords2').addEventListener('click', async () => {
-    document.getElementById('targetWord2').textContent = get2RandomItems(1)[0];
-});
+
 document.getElementById('generateButton').addEventListener('click', async () => {
     const inputText = document.getElementById('inputText').value;
     const outputDiv = document.getElementById('output');
@@ -133,7 +140,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             }
             else return `${text}`;
         }
-        
+    try{
         const tokensArray = await getResponse(inputText,maxTokens,true);
         outputDiv.innerHTML  =  tokensArray.map(getFormattedText).join('\n');
         if(model2){
@@ -147,8 +154,8 @@ document.getElementById('generateButton').addEventListener('click', async () => 
         } else {
             outputDiv.textContent = `Error: ${data.error.message}`;
         }
-    //} catch (error) {
+    } catch (error) {
         outputDiv.textContent = `Error: ${error.message}`;
-    //}
+    }
 });
 

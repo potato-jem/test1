@@ -10,9 +10,10 @@
     <div class="container">
         <textarea id="targetWord1" class="target"></textarea>
         <textarea id="targetWord2" class="target" ></textarea>
+        <textarea id="difficulty" class="s" ></textarea>
         <button id="refreshWords">new</button>
-        <button id="refreshWords1">new1</button>
-        <button id="refreshWords2">new2</button>
+        <!-- <button id="refreshWords1">new1</button> -->
+        <!-- <button id="refreshWords2">new2</button> -->
         <textarea id="inputText" class="input" placeholder="Goal: enter text so the next word GPT3.5 predicts is likely to be both the above words"></textarea>
         <button id="generateButton">Generate Completion</button>
         
@@ -32,6 +33,8 @@
             <textarea id="num_return" class="param" >10</textarea>
             <textarea id="prefix" class="param" >continue this: </textarea>
             <textarea id="model2" class="param" >true</textarea>
+            <textarea id="minD" class="param" >0.2</textarea>
+            <textarea id="maxD" class="param" >0.6</textarea>
             <!-- </div> -->
     </div>
     <script src="all_words.js" ></script>
