@@ -45,7 +45,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
     const instruct_model = 'gpt-3.5-turbo-instruct';
     const maxTokens = +document.getElementById('maxTokens').value;//3;
     const num_return= +document.getElementById('num_return').value;//20;
-    const prefix= document.getElementById('prefix').value;//"continue this: ";
+    // const prefix= document.getElementById('prefix').value;//"continue this: ";
     const model2 = document.getElementById('model2').value==='true';// true;
 
         async function getResponse(chattext,maxTokens,chat,num_logprobs=num_return,iteration=false){
@@ -57,7 +57,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             if (chat){
                 f="chat/";
                 b["model"]=chat_model;
-                b["messages"]=[{role: "user",content: `${prefix}${chattext}`}];
+                b["messages"]=[{role: "assistant",content: `${chattext}`}];
                 if (num_logprobs>0){
                     b["logprobs"]=true;
                     b["top_logprobs"]=num_logprobs;
@@ -98,12 +98,10 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             for (const token in tokens) {
                 //consider what happens if there is trailing space?
                 let key = tokens[token][0];
-                let keyt = key.trim();
+                let keyt = key.trim().lower();
                 const lp = Math.exp(tokens[token][1]);
                 const idx_match = tokensArray.findIndex(subArray => subArray[0] === keyt);
                 let content = '';
-                console.log(token);
-                console.log(first_token);
                 if (token==first_token){
                     content=first_content;
                 }
