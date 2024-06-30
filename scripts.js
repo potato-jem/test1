@@ -98,7 +98,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             for (const token in tokens) {
                 //consider what happens if there is trailing space?
                 let key = tokens[token][0];
-                let keyt = key.trim().lower();
+                let keyt = key.trim().toLowerCase();
                 const lp = Math.exp(tokens[token][1]);
                 const idx_match = tokensArray.findIndex(subArray => subArray[0] === keyt);
                 let content = '';
