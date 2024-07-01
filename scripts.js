@@ -50,6 +50,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
     const inputText = document.getElementById('inputText').value;
     const outputDiv = document.getElementById('output');
     const outputDiv2 = document.getElementById('output2');
+    const scoreDiv = document.getElementById('scoreID');
     const target1 = document.getElementById('targetWord1').value;
     const target2 = document.getElementById('targetWord2').value;
 
@@ -185,6 +186,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
     try{
         let [tokensArray,score] = await getResponse(inputText,max_tokens,true);
         outputDiv.innerHTML  =  tokensArray.map(getFormattedText).join('\n');
+        scoreDiv.innerHTML  =  `Score: ${score}`;
         if(model2){
             let [tokensArray2,score2] = await getResponse(inputText,max_tokens,false);
             outputDiv2.innerHTML = tokensArray2.map(getFormattedText).join('\n');
