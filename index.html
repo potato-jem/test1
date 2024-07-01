@@ -12,8 +12,6 @@
         <textarea id="targetWord2" class="target" ></textarea>
         <textarea id="difficulty" class="s" ></textarea>
         <button id="refreshWords">new</button>
-        <!-- <button id="refreshWords1">new1</button> -->
-        <!-- <button id="refreshWords2">new2</button> -->
         <textarea id="inputText" class="input" placeholder="Goal: enter text so the next word GPT3.5 predicts is likely to be both the above words"></textarea>
         <button id="generateButton">Generate Completion</button>
         
@@ -30,15 +28,18 @@
         
         <!-- <div class="columns"> -->
             <textarea id="maxTokens" class="param" >3</textarea>
-            <textarea id="num_return" class="param" >10</textarea>
+            <textarea id="numReturn" class="param" >10</textarea>
             <textarea id="" class="param" ></textarea>
             <textarea id="model2" class="param" >true</textarea>
             <textarea id="minD" class="param" >0.2</textarea>
             <textarea id="maxD" class="param" >0.6</textarea>
             <!-- </div> -->
     </div>
-    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore.js"></script>
+        <!-- update the version number as needed -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
     <script src="all_words.js" ></script>
     <script src="scripts.js" ></script>
 </body>

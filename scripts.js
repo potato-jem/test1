@@ -1,15 +1,28 @@
 
-// function get2RandomItems(count=2) {
-//     const uniqueNumbers = new Set();
+if (!localStorage.getItem('userID')) {
+    // Set the value if it doesn't exist
+    localStorage.setItem('userID', uuid.v4());
+}
+if (!sessionStorage.getItem('sessionID')) {
+    // Set the value if it doesn't exist
+    sessionStorage.setItem('sessionID', uuid.v4());
+}
 
-//     while (uniqueNumbers.size < count) {
-//         const randomNumber = Math.floor(Math.random() * all_words.length);
-//         uniqueNumbers.add(randomNumber);
-//     }
-//     out=[]
-//     for(const v of uniqueNumbers){out.push(all_words[v])}
-//     return(out)
-// }
+
+const firebaseConfig = {
+    apiKey: atob('QUl6YVN5QzdoektwbWhXMUFOVzRPWm8xZkxfU1pYYVZzT1ExT2FF'),
+    authDomain: "potato-jem.firebaseapp.com",
+    databaseURL: "https://potato-jem-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "potato-jem",
+    storageBucket: "potato-jem.appspot.com",
+    messagingSenderId: "124710166334",
+    appId: atob('MToxMjQ3MTAxNjYzMzQ6d2ViOmU3MTQ1ZjRkYjA1Y2VjMGM4YTE2NmY='),
+    measurementId: "G-GM61YTH9G5"
+};
+
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 function setRandomWords(min,max) {
     let minI=all_words[2].findIndex((x)=>x>=min)
     let maxI=all_words[2].findIndex((x)=>x>max)
@@ -43,14 +56,14 @@ document.getElementById('generateButton').addEventListener('click', async () => 
     const x = atob('c2stcHJvai0zZDN5MWo5TDRaYVljVG1oTllmNlQzQmxia0ZKZUJNalpUQXZWMnRKM0tYWVA5MkM=');
     const chat_model = 'gpt-3.5-turbo';
     const instruct_model = 'gpt-3.5-turbo-instruct';
-    const maxTokens = +document.getElementById('maxTokens').value;//3;
-    const num_return= +document.getElementById('num_return').value;//20;
+    const max_tokens = +document.getElementById('maxTokens').value;//3;
+    const num_return= +document.getElementById('numReturn').value;//20;
     // const prefix= document.getElementById('prefix').value;//"continue this: ";
     const model2 = document.getElementById('model2').value==='true';// true;
 
-        async function getResponse(chattext,maxTokens,chat,num_logprobs=num_return,iteration=false){
+        async function getResponse(chattext,max_tokens,chat,num_logprobs=num_return,iteration=false){
             let b = {
-                max_tokens: maxTokens,
+                max_tokens: max_tokens,
                 temperature: 0
             }
             let f="";
@@ -113,15 +126,46 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                     //if token is partial match, check if it is full match
                     
                     if((target1.startsWith(keyt) || target2.startsWith(keyt)) && !(keyt.startsWith(target1) || keyt.startsWith(target2)) && keyt.length>0 && iteration==false){
-                        iteratedTokensArray = await getResponse(chattext+key,maxTokens,chat,num_logprobs,true);
+                        let [iteratedTokensArray,score] = await getResponse(chattext+key,max_tokens,chat,num_logprobs,true);
                         content=iteratedTokensArray[0][3]
                         keyt=(keyt+content).split(' ')[0]
                     }
                     tokensArray.push([keyt,lp,key,content,keyt.startsWith(target1),keyt.startsWith(target2)]);
                 }
             }
+            target1_idx=tokensArray.findIndex(row => row[4] === true);
+            target2_idx=tokensArray.findIndex(row => row[5] === true);
+            let score=0
+            if (target1_idx==-1 || target2_idx==-1){
+                score=0
+            } else {
+                score = Math.max(0,5-Math.max(target1_idx,target2_idx))
+            }
+
             tokensArray.sort((a, b) => b[1] - a[1]);
-            return(tokensArray)
+            let dbitem = {
+                timestamp: Date.now(),
+                userID: localStorage.getItem('userID'),
+                sessionID: sessionStorage.getItem('sessionID'),
+                device:navigator.userAgent.match(/\(([^)]+)\)/)[1],
+                input: chattext,
+                score: score,
+                tokens: tokensArray.map(row => row[0]),
+                probs: tokensArray.map(row => row[1]),
+                tokens_orig: tokensArray.map(row => row[2]),
+                continue: tokensArray.map(row => row[3]),
+                target1_match: tokensArray.map(row => row[4]),
+                target2_match: tokensArray.map(row => row[5]),
+                parameters: {"max_tokens":max_tokens,
+                    "num_return":num_return,
+                    "minD":+document.getElementById('minD').value,
+                    "maxD":+document.getElementById('maxD').value},
+                target1: target1,
+                target2: target2,
+                chat_model: chat
+            }
+            db.collection("responses").add(dbitem)
+            return([tokensArray,score])
         }
 
         function getFormattedText([key, value,a,b,c,d]){
@@ -139,10 +183,10 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             else return `${text}`;
         }
     try{
-        const tokensArray = await getResponse(inputText,maxTokens,true);
+        let [tokensArray,score] = await getResponse(inputText,max_tokens,true);
         outputDiv.innerHTML  =  tokensArray.map(getFormattedText).join('\n');
         if(model2){
-            const tokensArray2 = await getResponse(inputText,maxTokens,false);
+            let [tokensArray2,score2] = await getResponse(inputText,max_tokens,false);
             outputDiv2.innerHTML = tokensArray2.map(getFormattedText).join('\n');
 
         }
