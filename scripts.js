@@ -8,6 +8,15 @@ if (!sessionStorage.getItem('sessionID')) {
     sessionStorage.setItem('sessionID', uuid.v4());
 }
 
+document.getElementById('showParams').addEventListener('change', function() {
+    var toggleElement = document.getElementById('params');
+    if (this.checked) {
+        toggleElement.style.display = 'flex';
+    } else {
+        toggleElement.style.display = 'none';
+    }
+})
+// model2
 
 const firebaseConfig = {
     apiKey: atob('QUl6YVN5QzdoektwbWhXMUFOVzRPWm8xZkxfU1pYYVZzT1ExT2FF'),
@@ -22,6 +31,9 @@ const firebaseConfig = {
 
 const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+answer = ""
+todaysDate = new Intl.DateTimeFormat('en-CA').format(new Date());
+stale_id=""
 
 function setRandomWords(min,max) {
     let minI=all_words[2].findIndex((x)=>x>=min)
@@ -33,18 +45,76 @@ function setRandomWords(min,max) {
 
     out=[all_words[0][selectedIndex],all_words[1][selectedIndex],all_words[2][selectedIndex]]
     //for(const v of uniqueNumbers){out.push(all_words[v])}
-    document.getElementById('targetWord1').textContent = out[0]
-    document.getElementById('targetWord2').textContent = out[1]
-    document.getElementById('difficulty').textContent = Math.round((out[2]*100))
+    document.getElementById('targetWord1').value = out[0]
+    document.getElementById('targetWord2').value = out[1]
+    document.getElementById('difficulty').value = Math.round((out[2]*100))
     return(out)
 }
+
+async function getTodaysWords(env="TEST"){
+    todaysDate = new Intl.DateTimeFormat('en-CA').format(new Date());
+    // const referenceDate = new Date('2024-08-20'); 
+    // Convert the time difference from milliseconds to days
+    //const dayDifference = Math.floor((currentDate - referenceDate) / (1000 * 60 * 60 * 24));
+    const docRef = db.collection("/targets/"+env+"/todays_word/").doc(todaysDate)
+
+    collection="/targets/"+env+"/reviewed_items"
+    selected_word = await docRef.get()
+    if (selected_word.exists) {
+        todays_word_item=selected_word.data()
+        docId=todays_word_item.id;
+        chosen_item=await db.collection(todays_word_item.collection).doc(todays_word_item.id).get()
+        data=chosen_item.data()
+    } else {
+        chosen_item=await db.collection(collection).limit(1).get()
+        if(chosen_item.size==0){
+            collection="/targets/"+env+"/potential_items"
+            chosen_item=await db.collection(collection).limit(1).get()
+            if(chosen_item.size==0){
+                console.log("No items found")
+            }
+        }
+        data=chosen_item.docs[0].data()
+        docId=chosen_item.docs[0].id;
+        data.user_count=data.user_count+1;
+        data.stale=true;
+        data.date=todaysDate;
+        await db.collection("/targets/"+env+"/stale_items").doc(docId).set(data);
+        await db.collection(collection).doc(docId).delete();;
+        todays_word_item={};
+        todays_word_item.collection="/targets/"+env+"/stale_items"
+        todays_word_item.date=new Date();
+        todays_word_item.id=docId
+        await docRef.set(todays_word_item);
+    }
+
+        document.getElementById('targetWord1').value = data.target1.trim();
+        document.getElementById('targetWord2').value = data.target2.trim();
+        document.getElementById('difficulty').value =  data.difficulty;
+        answer = data.answer;
+        stale_id=docId;
+}
+
+
 // function update
 
-setRandomWords(+document.getElementById('minD').value,+document.getElementById('maxD').value);
+//setRandomWords(+document.getElementById('minD').value,+document.getElementById('maxD').value);
+getTodaysWords();
 
 document.getElementById('refreshWords').addEventListener('click', async () => {
     setRandomWords(+document.getElementById('minD').value,+document.getElementById('maxD').value);
 });
+
+
+async function updateDocument(collectionName, documentId, updatedData) {
+    try {
+      const docRef = db.collection(collectionName).doc(documentId);
+      await docRef.update(updatedData);
+      console.log("Document successfully updated!");
+    } catch (error) {
+      console.error("Error updating document:", error);
+    }
+  }
 
 document.getElementById('generateButton').addEventListener('click', async () => {
     const inputText = document.getElementById('inputText').value;
@@ -161,6 +231,8 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                     "num_return":num_return,
                     "minD":+document.getElementById('minD').value,
                     "maxD":+document.getElementById('maxD').value},
+                id: stale_id,
+                todays_word_id: todaysDate,
                 target1: target1,
                 target2: target2,
                 chat_model: chat

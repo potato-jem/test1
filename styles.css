@@ -17,7 +17,7 @@ body {
     max-width: 800px;
     text-align: center;
     align-items: center;
-    justify-content: center;
+    justify-content: space-evenly;
 }
 
 .columns {
@@ -59,7 +59,6 @@ body {
 
 .target {
     width: 35%;
-    height: 20px;
     padding: 5px;
     margin-bottom: 10px;
     margin-top: 10px;
@@ -70,7 +69,6 @@ body {
 
 .s {
     width: 10%;
-    height: 20px;
     padding: 5px;
     margin-bottom: 10px;
     margin-top: 10px;
@@ -79,14 +77,14 @@ body {
     text-align: center;
 }
 .param {
-    width: 25%;
-    height: 20px;
     padding: 5px;
     margin: 1%;
     border-radius: 4px;
-    border: 1px solid #ccc;
+    border: 1px solid lightgrey;
 }
-
+.start-hidden{
+    display: none;
+}
 button {
     padding: 10px 30px;
     border: none;
@@ -112,4 +110,8 @@ button:hover {
 h5 {
     margin-bottom: 5px;
     margin-top: 10px;
+}
+label {
+    font-size: small;
+    color: grey;
 }
