@@ -101,11 +101,14 @@ async function getTodaysWords(env="TEST"){
 //setRandomWords(+document.getElementById('minD').value,+document.getElementById('maxD').value);
 getTodaysWords();
 
-document.getElementById('refreshWords').addEventListener('click', async () => {
-    setRandomWords(+document.getElementById('minD').value,+document.getElementById('maxD').value);
+// document.getElementById('refreshWords').addEventListener('click', async () => {
+//     setRandomWords(+document.getElementById('minD').value,+document.getElementById('maxD').value);
+// });
+
+document.getElementById('viewAnswer').addEventListener('click', async () => {
+    answerId=document.getElementById('answerID');
+    answerId.innerHTML  =  `Possible answer: ${answer}`;
 });
-
-
 async function updateDocument(collectionName, documentId, updatedData) {
     try {
       const docRef = db.collection(collectionName).doc(documentId);
