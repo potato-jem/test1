@@ -8,12 +8,21 @@
 </head>
 <body>
     <div class="container">
+        <button class="small-button" id="leftButton">&lt</button>
+        <span id="date" class="date-text"></span>
+        <button class="small-button" id="rightButton">&gt</button>
+        <br>
         <input id="targetWord1" class="target"></input>
         <input id="targetWord2" class="target" ></input>
-        <input id="difficulty" class="s" ></input><br>
-        <textarea id="inputText" class="input" placeholder="GPT3.5 will predict the top 5 next most likely words.&#10;Goal: enter text so the above words appear as next most likely."></textarea><br>
+        <!--<input id="difficulty" class="s" ></input>-->
+        <br>
+        <textarea id="inputText" class="input" placeholder="ChatGPT predicts the most likely next words. &#10;Goal: enter text so the above words appear as next most likely."></textarea><br>
         <button id="generateButton">Submit</button>
-        <button id="viewAnswer">View Answer</button><br>
+        <br>
+        <!-- <span style="display: block; height: 10px;"></span> -->
+        <button class="small-button" id="viewAnswer">View Answer</button>
+        <button class="small-button" id="hideAnswer">Hide Answer</button>
+        <br>
         <h5 id="answerID"></h5>
         <h5 id="scoreID"></h5>
         <!-- <h5>gpt3-turbo</h5> -->
@@ -28,24 +37,29 @@
         <input type="checkbox" id="model2" class="param",  value=false></input>
         </div>
         <div class="column">
-        <label for="showParams">Show parameters</label>
+        <label for="showParams">Show options</label>
         <input type="checkbox" id="showParams" class="param",  value=false></input>
     </div>
         </div>
-        <div id="params" class="columns start-hidden">
+        <div id="params" class="start-hidden">
+            <div class="columns">
             <div class="column">
             <label for="maxTokens">Max Tokens</label>
             <input type="number" id="maxTokens" class="param", value=3></input><br>
             <label for="numReturn">Return Items</label>
             <input type="number" id="numReturn" class="param", value=10></input><br>
+            
             </div>
             <div class="column">
             <label for="minD">Minimum difficulty</label>
             <input type="number" id="minD" class="param",      value=0.2 , step=0.05></input><br>
             <label for="maxD">Maximum difficulty</label>
             <input type="number" id="maxD" class="param",      value=0.6 , step=0.05></input><br>
+            </div>
+            </div>
+        <br>
         </div>
-        </div>
+        <div id="info" class="start-hidden"></div>
     </div>
         <!-- update the version number as needed -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>

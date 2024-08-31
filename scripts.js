@@ -32,9 +32,12 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 answer = ""
-todaysDate = new Intl.DateTimeFormat('en-CA').format(new Date());
+now = new Date();
+todaysDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+selectedDate = todaysDate;
 stale_id=""
-
+minDate=new Date(2024, 7, 27)
+maxDate=todaysDate
 function setRandomWords(min,max) {
     let minI=all_words[2].findIndex((x)=>x>=min)
     let maxI=all_words[2].findIndex((x)=>x>max)
@@ -47,16 +50,18 @@ function setRandomWords(min,max) {
     //for(const v of uniqueNumbers){out.push(all_words[v])}
     document.getElementById('targetWord1').value = out[0]
     document.getElementById('targetWord2').value = out[1]
-    document.getElementById('difficulty').value = Math.round((out[2]*100))
+    //document.getElementById('difficulty').value = Math.round((out[2]*100))
     return(out)
 }
 
-async function getTodaysWords(env="TEST"){
-    todaysDate = new Intl.DateTimeFormat('en-CA').format(new Date());
+async function getTodaysWords(dateToUse=new Date(), env="TEST"){
+    //todaysDate = new Intl.DateTimeFormat('en-CA').format(new Date());
     // const referenceDate = new Date('2024-08-20'); 
     // Convert the time difference from milliseconds to days
     //const dayDifference = Math.floor((currentDate - referenceDate) / (1000 * 60 * 60 * 24));
-    const docRef = db.collection("/targets/"+env+"/todays_word/").doc(todaysDate)
+    formattedDate=new Intl.DateTimeFormat('en-CA').format(dateToUse);
+    document.getElementById('date').innerHTML=formattedDate;
+    const docRef = db.collection("/targets/"+env+"/todays_word/").doc(formattedDate)
 
     collection="/targets/"+env+"/reviewed_items"
     selected_word = await docRef.get()
@@ -78,7 +83,7 @@ async function getTodaysWords(env="TEST"){
         docId=chosen_item.docs[0].id;
         data.user_count=data.user_count+1;
         data.stale=true;
-        data.date=todaysDate;
+        data.date=formattedDate;
         await db.collection("/targets/"+env+"/stale_items").doc(docId).set(data);
         await db.collection(collection).doc(docId).delete();;
         todays_word_item={};
@@ -90,16 +95,17 @@ async function getTodaysWords(env="TEST"){
 
         document.getElementById('targetWord1').value = data.target1.trim();
         document.getElementById('targetWord2').value = data.target2.trim();
-        document.getElementById('difficulty').value =  data.difficulty;
+       // document.getElementById('difficulty').value =  data.difficulty;
         answer = data.answer;
         stale_id=docId;
+        document.getElementById('info').innerHTML=JSON.stringify(data);
 }
 
 
 // function update
 
 //setRandomWords(+document.getElementById('minD').value,+document.getElementById('maxD').value);
-getTodaysWords();
+getTodaysWords(dateToUse=selectedDate);
 
 // document.getElementById('refreshWords').addEventListener('click', async () => {
 //     setRandomWords(+document.getElementById('minD').value,+document.getElementById('maxD').value);
@@ -108,6 +114,12 @@ getTodaysWords();
 document.getElementById('viewAnswer').addEventListener('click', async () => {
     answerId=document.getElementById('answerID');
     answerId.innerHTML  =  `Possible answer: ${answer}`;
+    document.getElementById('info').style.display = 'flex';
+});
+document.getElementById('hideAnswer').addEventListener('click', async () => {
+    answerId=document.getElementById('answerID');
+    answerId.innerHTML  =  "";
+    document.getElementById('info').style.display = 'none';
 });
 async function updateDocument(collectionName, documentId, updatedData) {
     try {
@@ -118,6 +130,23 @@ async function updateDocument(collectionName, documentId, updatedData) {
       console.error("Error updating document:", error);
     }
   }
+document.getElementById('leftButton').addEventListener('click', async () => {
+    updatedDate=new Date(selectedDate.getTime() - 24 * 60 * 60 * 1000);
+    if(updatedDate>=minDate){
+        selectedDate=updatedDate;
+        getTodaysWords(dateToUse=selectedDate);
+        }
+    }
+    
+)
+document.getElementById('rightButton').addEventListener('click', async () => {
+    updatedDate=new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000);
+    if(updatedDate<=maxDate){
+        selectedDate=updatedDate;
+        getTodaysWords(dateToUse=selectedDate);
+        }   
+    }   
+)
 
 document.getElementById('generateButton').addEventListener('click', async () => {
     const inputText = document.getElementById('inputText').value;
@@ -128,14 +157,14 @@ document.getElementById('generateButton').addEventListener('click', async () => 
     const target2 = document.getElementById('targetWord2').value;
 
     const x = atob('c2stcHJvai0zZDN5MWo5TDRaYVljVG1oTllmNlQzQmxia0ZKZUJNalpUQXZWMnRKM0tYWVA5MkM=');
-    const chat_model = 'gpt-3.5-turbo';
+    const chat_model = "gpt-4o-mini";//'gpt-3.5-turbo';
     const instruct_model = 'gpt-3.5-turbo-instruct';
     const max_tokens = +document.getElementById('maxTokens').value;//3;
     const num_return= +document.getElementById('numReturn').value;//20;
     // const prefix= document.getElementById('prefix').value;//"continue this: ";
     const model2 = document.getElementById('model2').value==='true';// true;
-
-        async function getResponse(chattext,max_tokens,chat,num_logprobs=num_return,iteration=false){
+    const system_instruction="continue the text"
+    async function getResponse(chattext,max_tokens,chat,num_logprobs=num_return,iteration=false){
             let b = {
                 max_tokens: max_tokens,
                 temperature: 0
@@ -144,7 +173,8 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             if (chat){
                 f="chat/";
                 b["model"]=chat_model;
-                b["messages"]=[{role: "assistant",content: `${chattext}`}];
+                b["messages"]=[{"role": "system","content": `${system_instruction}`},
+                 {"role": "assistant","content": `${chattext}`}];
                 if (num_logprobs>0){
                     b["logprobs"]=true;
                     b["top_logprobs"]=num_logprobs;
@@ -200,7 +230,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                     //if token is partial match, check if it is full match
                     
                     if((target1.startsWith(keyt) || target2.startsWith(keyt)) && !(keyt.startsWith(target1) || keyt.startsWith(target2)) && keyt.length>0 && iteration==false){
-                        let [iteratedTokensArray,score] = await getResponse(chattext+key,max_tokens,chat,num_logprobs,true);
+                        let [iteratedTokensArray,score,dbitem] = await getResponse(chattext+key,max_tokens,chat,num_logprobs,true);
                         content=iteratedTokensArray[0][3]
                         keyt=(keyt+content).split(' ')[0]
                     }
@@ -240,8 +270,8 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                 target2: target2,
                 chat_model: chat
             }
-            db.collection("responses").add(dbitem)
-            return([tokensArray,score])
+            //db.collection("responses").add(dbitem)
+            return([tokensArray,score,dbitem])
         }
 
         function getFormattedText([key, value,a,b,c,d]){
@@ -259,13 +289,13 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             else return `${text}`;
         }
     try{
-        let [tokensArray,score] = await getResponse(inputText,max_tokens,true);
+        let [tokensArray,score,dbitem] = await getResponse(inputText,max_tokens,true);
         outputDiv.innerHTML  =  tokensArray.map(getFormattedText).join('\n');
         scoreDiv.innerHTML  =  `Score: ${score}`;
+        db.collection("responses").add(dbitem)
         if(model2){
-            let [tokensArray2,score2] = await getResponse(inputText,max_tokens,false);
+            let [tokensArray2,score2,dbitem] = await getResponse(inputText,max_tokens,false);
             outputDiv2.innerHTML = tokensArray2.map(getFormattedText).join('\n');
-
         }
 
         if (true) {
