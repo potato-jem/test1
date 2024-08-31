@@ -98,7 +98,7 @@ async function getTodaysWords(dateToUse=new Date(), env="TEST"){
        // document.getElementById('difficulty').value =  data.difficulty;
         answer = data.answer;
         stale_id=docId;
-        document.getElementById('info').innerHTML=JSON.stringify(data);
+        document.getElementById('info').innerHTML=JSON.stringify(data, null, 2);
 }
 
 
@@ -164,7 +164,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
     // const prefix= document.getElementById('prefix').value;//"continue this: ";
     const model2 = document.getElementById('model2').value==='true';// true;
     const system_instruction="continue the text"
-    async function getResponse(chattext,max_tokens,chat,num_logprobs=num_return,iteration=false){
+    async function getResponse(chattext,max_tokens,chat,num_logprobs=num_return,iteration=false,extra_message=""){
             let b = {
                 max_tokens: max_tokens,
                 temperature: 0
@@ -175,13 +175,16 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                 b["model"]=chat_model;
                 b["messages"]=[{"role": "system","content": `${system_instruction}`},
                  {"role": "assistant","content": `${chattext}`}];
+                if(extra_message.length>0){
+                    b["messages"][2]={"role": "assistant","content": `${extra_message}`}
+                }
                 if (num_logprobs>0){
                     b["logprobs"]=true;
                     b["top_logprobs"]=num_logprobs;
                 }
             } else {
                 b["model"]=instruct_model;
-                b["prompt"]=chattext
+                b["prompt"]=chattext+extra_message;
                 if (num_logprobs>0){
                     b["logprobs"]=num_logprobs;
                 }
@@ -211,7 +214,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                 data.choices[0].logprobs.tokens[0];
             }
             const tokensArray = [] ;
-
+            console.log(tokens)
             for (const token in tokens) {
                 //consider what happens if there is trailing space?
                 let key = tokens[token][0];
@@ -230,7 +233,8 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                     //if token is partial match, check if it is full match
                     
                     if((target1.startsWith(keyt) || target2.startsWith(keyt)) && !(keyt.startsWith(target1) || keyt.startsWith(target2)) && keyt.length>0 && iteration==false){
-                        let [iteratedTokensArray,score,dbitem] = await getResponse(chattext+key,max_tokens,chat,num_logprobs,true);
+                        console.log(chattext+key)
+                        let [iteratedTokensArray,score,dbitem] = await getResponse(chattext,max_tokens,chat,num_logprobs,true,extra_message=key);
                         content=iteratedTokensArray[0][3]
                         keyt=(keyt+content).split(' ')[0]
                     }
