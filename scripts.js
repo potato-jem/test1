@@ -163,7 +163,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
     const num_return= +document.getElementById('numReturn').value;//20;
     // const prefix= document.getElementById('prefix').value;//"continue this: ";
     const model2 = document.getElementById('model2').value==='true';// true;
-    const system_instruction="continue the text"
+    const system_instruction="Continue the sentence without repeating the prompt"
     async function getResponse(chattext,max_tokens,chat,num_logprobs=num_return,iteration=false,extra_message=""){
             let b = {
                 max_tokens: max_tokens,
@@ -174,7 +174,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                 f="chat/";
                 b["model"]=chat_model;
                 b["messages"]=[{"role": "system","content": `${system_instruction}`},
-                 {"role": "assistant","content": `${chattext}`}];
+                 {"role": "user","content": `${chattext}`}];
                 if(extra_message.length>0){
                     b["messages"][2]={"role": "assistant","content": `${extra_message}`}
                 }
