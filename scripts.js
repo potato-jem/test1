@@ -234,7 +234,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                     
                     if((target1.startsWith(keyt) || target2.startsWith(keyt)) && !(keyt.startsWith(target1) || keyt.startsWith(target2)) && keyt.length>0 && iteration==false){
                         console.log(chattext+key)
-                        let [iteratedTokensArray,score,dbitem] = await getResponse(chattext,max_tokens,chat,num_logprobs,true,extra_message=key);
+                        let [iteratedTokensArray,score,dbitem] = await getResponse(chattext+key,max_tokens,chat,num_logprobs,true);
                         content=iteratedTokensArray[0][3]
                         keyt=(keyt+content).split(' ')[0]
                     }
