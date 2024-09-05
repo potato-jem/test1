@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Completion</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <button class="small-button" id="leftButton">&lt</button>
+        <span id="date" class="puzzle-date"></span>
+        <button class="small-button" id="rightButton">&gt</button>
+        <br>
+        <input id="targetWord1" class="target"></input>
+        <input id="targetWord2" class="target" ></input>
+        <!--<input id="difficulty" class="s" ></input>-->
+        <br>
+        <textarea id="inputText" class="input" placeholder="ChatGPT predicts the most likely next words. &#10;Goal: enter text so the above words appear as next most likely."></textarea><br>
+        <button id="generateButton">Submit</button>
+        <br>
+        <!-- <span style="display: block; height: 10px;"></span> -->
+        <button class="small-button" id="viewAnswer">View Answer</button>
+        <button class="small-button" id="hideAnswer">Hide Answer</button>
+        <br>
+        <h5 id="answerID"></h5>
+        <h5 id="scoreID"></h5>
+        <!-- <h5>gpt3-turbo</h5> -->
+        <div id="output" class="output"></div>
+        <div id="instruct_model" class="start-hidden">
+        <h5>gpt3-turbo-instruct</h5>
+        <div id="output2" class="output"></div>
+        </div>
+        <div class="columns">
+        <div class="column">
+            <label for="model2">Completion Model</label>
+        <input type="checkbox" id="model2" class="param",  value=false></input>
+        </div>
+        <div class="column">
+        <label for="showParams">Show options</label>
+        <input type="checkbox" id="showParams" class="param",  value=false></input>
+    </div>
+        </div>
+        <div id="params" class="start-hidden">
+            <div class="columns">
+            <div class="column">
+            <label for="maxTokens">Max Tokens</label>
+            <input type="number" id="maxTokens" class="param", value=5></input><br>
+            <label for="numReturn">Return Items</label>
+            <input type="number" id="numReturn" class="param", value=10></input><br>
+            
+            </div>
+            <div class="column">
+            <label for="minD">Minimum difficulty</label>
+            <input type="number" id="minD" class="param",      value=0.2 , step=0.05></input><br>
+            <label for="maxD">Maximum difficulty</label>
+            <input type="number" id="maxD" class="param",      value=0.6 , step=0.05></input><br>
+            </div>
+            </div>
+        <br>
+        </div>
+        <div id="info" class="start-hidden"></div>
+    </div>
+        <!-- update the version number as needed -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
+    <!-- <script src="all_words.js" ></script> -->
+    <script src="script_original.js" ></script>
+</body>
+</html>

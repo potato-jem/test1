@@ -8,14 +8,14 @@ if (!sessionStorage.getItem('sessionID')) {
     sessionStorage.setItem('sessionID', uuid.v4());
 }
 
-// document.getElementById('showParams').addEventListener('change', function() {
-//     var toggleElement = document.getElementById('params');
-//     if (this.checked) {
-//         toggleElement.style.display = 'flex';
-//     } else {
-//         toggleElement.style.display = 'none';
-//     }
-// })
+document.getElementById('showParams').addEventListener('change', function() {
+    var toggleElement = document.getElementById('params');
+    if (this.checked) {
+        toggleElement.style.display = 'flex';
+    } else {
+        toggleElement.style.display = 'none';
+    }
+})
 // model2
 
 const firebaseConfig = {
@@ -93,8 +93,8 @@ async function getTodaysWords(dateToUse=new Date(), env="TEST"){
         await docRef.set(todays_word_item);
     }
 
-        document.getElementById('targetWord1').innerHTML = data.target1.trim();
-        document.getElementById('targetWord2').innerHTML = data.target2.trim();
+        document.getElementById('targetWord1').value = data.target1.trim();
+        document.getElementById('targetWord2').value = data.target2.trim();
        // document.getElementById('difficulty').value =  data.difficulty;
         answer = data.answer;
         stale_id=docId;
@@ -114,8 +114,7 @@ getTodaysWords(dateToUse=selectedDate);
 document.getElementById('viewAnswer').addEventListener('click', async () => {
     answerId=document.getElementById('answerID');
     answerId.innerHTML  =  `Possible answer: ${answer}`;
-    document.getElementById('answerID').style.display = 'block';
-    document.getElementById('info').style.display = 'block';
+    document.getElementById('info').style.display = 'flex';
 });
 document.getElementById('hideAnswer').addEventListener('click', async () => {
     answerId=document.getElementById('answerID');
@@ -151,33 +150,19 @@ document.getElementById('rightButton').addEventListener('click', async () => {
 
 document.getElementById('generateButton').addEventListener('click', async () => {
     const inputText = document.getElementById('inputText').value;
-    const outputDiv = document.getElementById('results');
-    // const outputDiv2 = document.getElementById('output2');
-    
+    const outputDiv = document.getElementById('output');
+    const outputDiv2 = document.getElementById('output2');
     const scoreDiv = document.getElementById('scoreID');
-    const target1 = document.getElementById('targetWord1').innerHTML;
-    const target2 = document.getElementById('targetWord2').innerHTML;
+    const target1 = document.getElementById('targetWord1').value;
+    const target2 = document.getElementById('targetWord2').value;
 
     const x = atob('c2stcHJvai0zZDN5MWo5TDRaYVljVG1oTllmNlQzQmxia0ZKZUJNalpUQXZWMnRKM0tYWVA5MkM=');
     const chat_model = "gpt-4o-mini";//'gpt-3.5-turbo';
     const instruct_model = 'gpt-3.5-turbo-instruct';
-    const max_tokens = 3;//+document.getElementById('maxTokens').value;//3;
-    const num_return= 10;//+document.getElementById('numReturn').value;//20;
+    const max_tokens = +document.getElementById('maxTokens').value;//3;
+    const num_return= +document.getElementById('numReturn').value;//20;
     // const prefix= document.getElementById('prefix').value;//"continue this: ";
-    // const model2 = document.getElementById('model2').value==='true';// true;
-    for (let i = 0; i < 5; i++) {
-        element=document.getElementById('result-word-'+(i+1))
-        element.querySelector('.new-word').innerHTML = '';
-        element.style.display = 'none';
-        element.querySelector('.result-bar').style.width = 0;
-        element.querySelector('.new-word').classList.remove('match-word');
-    }
-    document.getElementById('results').style.display = 'none';
-    document.getElementById('stars').style.display = 'none';
-    document.getElementById('star-1').classList.remove('filled', 'outline');
-    document.getElementById('star-2').classList.remove('filled', 'outline');
-    document.getElementById('star-3').classList.remove('filled', 'outline');
-
+    const model2 = document.getElementById('model2').value==='true';// true;
     const system_instruction="Continue the sentence without repeating the prompt"
     async function getResponse(chattext,max_tokens,chat,num_logprobs=num_return,iteration=false,extra_message=""){
             let b = {
@@ -249,7 +234,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                     
                     if((target1.startsWith(keyt) || target2.startsWith(keyt)) && !(keyt.startsWith(target1) || keyt.startsWith(target2)) && keyt.length>0 && iteration==false){
                         console.log(chattext+key)
-                        let [iteratedTokensArray,score,dbitem] = await getResponse(chattext,max_tokens,chat,num_logprobs,true,extra_message=key);
+                        let [iteratedTokensArray,score,dbitem] = await getResponse(chattext+key,max_tokens,chat,num_logprobs,true);
                         content=iteratedTokensArray[0][3]
                         keyt=(keyt+content).split(' ')[0]
                     }
@@ -280,10 +265,9 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                 target1_match: tokensArray.map(row => row[4]),
                 target2_match: tokensArray.map(row => row[5]),
                 parameters: {"max_tokens":max_tokens,
-                    "num_return":num_return//,
-                    // "minD":+document.getElementById('minD').value,
-                    // "maxD":+document.getElementById('maxD').value
-                },
+                    "num_return":num_return,
+                    "minD":+document.getElementById('minD').value,
+                    "maxD":+document.getElementById('maxD').value},
                 id: stale_id,
                 todays_word_id: todaysDate,
                 target1: target1,
@@ -310,60 +294,13 @@ document.getElementById('generateButton').addEventListener('click', async () => 
         }
     try{
         let [tokensArray,score,dbitem] = await getResponse(inputText,max_tokens,true);
-        
-        for (let i = 0; i < 5; i++) {
-            element=document.getElementById('result-word-'+(i+1))
-            element.querySelector('.new-word').innerHTML = tokensArray[i][0]
-            element.querySelector('.result-bar').style.width = 100*Math.round(tokensArray[i][1],2)+'%'
-            if(tokensArray[i][4] || tokensArray[i][5]){
-                element.querySelector('.new-word').classList+=" match-word"
-            }
-        }
-
-        //outputDiv.innerHTML  =  tokensArray.map(getFormattedText).join('\n');
-        //scoreDiv.innerHTML  =  `Score: ${score}`;
+        outputDiv.innerHTML  =  tokensArray.map(getFormattedText).join('\n');
+        scoreDiv.innerHTML  =  `Score: ${score}`;
         db.collection("responses").add(dbitem)
-        document.getElementById('results').style.display = 'block';
-            const intv=500;
-            // Simulate word predictions and score updates in the popup
-            setTimeout(function() {
-                document.getElementById('result-word-1').style.display = 'block';
-            }, 0);
-
-            setTimeout(function() {
-                document.getElementById('result-word-2').style.display = 'block';
-            }, 1*intv);
-
-            setTimeout(function() {
-                document.getElementById('result-word-3').style.display = 'block';
-            }, 2*intv);
-
-            setTimeout(function() {
-                document.getElementById('result-word-4').style.display = 'block';
-            }, 3*intv);
-
-            setTimeout(function() {
-                document.getElementById('result-word-5').style.display = 'block';
-            }, 4*intv);
-
-            setTimeout(function() {
-                document.getElementById('stars').style.display = 'block';
-                document.getElementById('star-1').classList.add(score >= 1 ? 'filled' : 'outline');
-            }, 5*intv);
-
-            setTimeout(function() {
-                document.getElementById('star-2').classList.add(score >= 2 ? 'filled' : 'outline');
-            }, 6*intv);
-
-            setTimeout(function() {
-                document.getElementById('star-3').classList.add(score >= 3 ? 'filled' : 'outline');
-                document.getElementById('viewAnswer').style.display = 'block';
-            }, 7*intv);
-
-        // if(model2){
-        //     let [tokensArray2,score2,dbitem] = await getResponse(inputText,max_tokens,false);
-        //     outputDiv2.innerHTML = tokensArray2.map(getFormattedText).join('\n');
-        // }
+        if(model2){
+            let [tokensArray2,score2,dbitem] = await getResponse(inputText,max_tokens,false);
+            outputDiv2.innerHTML = tokensArray2.map(getFormattedText).join('\n');
+        }
 
         if (true) {
             
