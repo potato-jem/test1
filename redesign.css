@@ -223,6 +223,11 @@ button:hover {
 .start-hidden {
     display: none;
 }
+
+.is-hidden {
+    display: none !important;
+}
+
 #info {
     font-size: 10px;
     padding:10px;

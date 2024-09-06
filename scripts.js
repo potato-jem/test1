@@ -161,7 +161,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
     const x = atob('c2stcHJvai0zZDN5MWo5TDRaYVljVG1oTllmNlQzQmxia0ZKZUJNalpUQXZWMnRKM0tYWVA5MkM=');
     const chat_model = "gpt-4o-mini";//'gpt-3.5-turbo';
     const instruct_model = 'gpt-3.5-turbo-instruct';
-    const max_tokens = 3;//+document.getElementById('maxTokens').value;//3;
+    const max_tokens = 10;//+document.getElementById('maxTokens').value;//3;
     const num_return= 10;//+document.getElementById('numReturn').value;//20;
     // const prefix= document.getElementById('prefix').value;//"continue this: ";
     // const model2 = document.getElementById('model2').value==='true';// true;
@@ -171,6 +171,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
         element.style.display = 'none';
         element.querySelector('.result-bar').style.width = 0;
         element.querySelector('.new-word').classList.remove('match-word');
+        element.classList.remove("is-hidden");
     }
     document.getElementById('results').style.display = 'none';
     document.getElementById('stars').style.display = 'none';
@@ -179,6 +180,11 @@ document.getElementById('generateButton').addEventListener('click', async () => 
     document.getElementById('star-3').classList.remove('filled', 'outline');
 
     const system_instruction="Continue the sentence without repeating the prompt"
+    const instruction_role="system"
+    const role="user"
+    // const system_instruction="Write me a sentence."
+    // const instruction_role="user"
+    // const role="assistant"
     async function getResponse(chattext,max_tokens,chat,num_logprobs=num_return,iteration=false,extra_message=""){
             let b = {
                 max_tokens: max_tokens,
@@ -188,8 +194,8 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             if (chat){
                 f="chat/";
                 b["model"]=chat_model;
-                b["messages"]=[{"role": "system","content": `${system_instruction}`},
-                 {"role": "user","content": `${chattext}`}];
+                b["messages"]=[{"role": instruction_role,"content": `${system_instruction}`},
+                 {"role": role,"content": `${chattext}`}];
                 if(extra_message.length>0){
                     b["messages"][2]={"role": "assistant","content": `${extra_message}`}
                 }
@@ -197,6 +203,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                     b["logprobs"]=true;
                     b["top_logprobs"]=num_logprobs;
                 }
+                b["stop"]=[" ", ".", ","]
             } else {
                 b["model"]=instruct_model;
                 b["prompt"]=chattext+extra_message;
@@ -310,14 +317,22 @@ document.getElementById('generateButton').addEventListener('click', async () => 
         }
     try{
         let [tokensArray,score,dbitem] = await getResponse(inputText,max_tokens,true);
-        
+        console.log(tokensArray)
         for (let i = 0; i < 5; i++) {
+            prob=100.0*tokensArray[i][1];
             element=document.getElementById('result-word-'+(i+1))
-            element.querySelector('.new-word').innerHTML = tokensArray[i][0]
-            element.querySelector('.result-bar').style.width = 100*Math.round(tokensArray[i][1],2)+'%'
-            if(tokensArray[i][4] || tokensArray[i][5]){
-                element.querySelector('.new-word').classList+=" match-word"
+            console.log(prob)
+            if(prob>=1){
+                element.querySelector('.new-word').innerHTML = tokensArray[i][0]
+
+                element.querySelector('.result-bar').style.width = prob+'%'
+                if(tokensArray[i][4] || tokensArray[i][5]){
+                    element.querySelector('.new-word').classList.add("match-word");
+                }
+            } else {
+                element.classList.add("is-hidden");
             }
+            
         }
 
         //outputDiv.innerHTML  =  tokensArray.map(getFormattedText).join('\n');
@@ -327,7 +342,9 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             const intv=500;
             // Simulate word predictions and score updates in the popup
             setTimeout(function() {
-                document.getElementById('result-word-1').style.display = 'block';
+                if(document.getElementById('result-word-1').innerText!=""){
+                    document.getElementById('result-word-1').style.display = 'block';
+                }
             }, 0);
 
             setTimeout(function() {
