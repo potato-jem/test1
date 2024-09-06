@@ -116,11 +116,11 @@
             }
         }
 
-        function displayBestWords() {
-            for (let i = 0; i < bestWords.length; i++) {
-                document.querySelector(`#result-word-${i + 1} .best-word`).innerText = bestWords[i] ? bestWords[i] : "";
-            }
-        }
+        // function displayBestWords() {
+        //     for (let i = 0; i < bestWords.length; i++) {
+        //         document.querySelector(`#result-word-${i + 1} .best-word`).innerHtml = bestWords[i] ? bestWords[i] : "";
+        //     }
+        // }
 
         document.getElementById("generateButton").onclick = function() {
             // const newWords = ["pleasant", "hot", "good", "great", "warm"];
@@ -148,7 +148,7 @@
             // }, 7*intv);
 
             // Display the best words on the page
-            displayBestWords();
+            // displayBestWords();
         };
 
     </script>

@@ -186,6 +186,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
     // const instruction_role="user"
     // const role="assistant"
     async function getResponse(chattext,max_tokens,chat,num_logprobs=num_return,iteration=false,extra_message=""){
+        
             let b = {
                 max_tokens: max_tokens,
                 temperature: 0
@@ -211,6 +212,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                     b["logprobs"]=num_logprobs;
                 }
             }   
+            console.log(JSON.stringify(b))
             let response = await fetch(`https://api.openai.com/v1/${f}completions`, {
                 method: 'POST',
                 headers: {
@@ -218,7 +220,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                     'Authorization': `Bearer ${x}`
                 },
                 body: JSON.stringify(b)
-            });
+            });        
             const data = await response.json();
             console.log(data);
             let tokens =[];
@@ -246,6 +248,9 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                 let content = '';
                 if (token==first_token){
                     content=first_content;
+                    if(iteration==false){
+                        content = content.slice(key.length);
+                    }
                 }
                 if(idx_match>=0){
                     let currentArray=tokensArray[idx_match];
@@ -254,9 +259,8 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                 } else {
                     //if token is partial match, check if it is full match
                     
-                    if((target1.startsWith(keyt) || target2.startsWith(keyt)) && !(keyt.startsWith(target1) || keyt.startsWith(target2)) && keyt.length>0 && iteration==false){
-                        console.log(chattext+key)
-                        let [iteratedTokensArray,score,dbitem] = await getResponse(chattext,max_tokens,chat,num_logprobs,true,extra_message=key);
+                    if((target1.startsWith(keyt) || target2.startsWith(keyt)) && !(keyt.startsWith(target1) || keyt.startsWith(target2)) && keyt.length>0 && iteration==false && content==''){
+                        let [iteratedTokensArray,score,dbitem] = await getResponse(chattext+" "+keyt,max_tokens,chat,num_logprobs,true);//,extra_message=key
                         content=iteratedTokensArray[0][3]
                         keyt=(keyt+content).split(' ')[0]
                     }
@@ -323,8 +327,11 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             element=document.getElementById('result-word-'+(i+1))
             console.log(prob)
             if(prob>=1){
-                element.querySelector('.new-word').innerHTML = tokensArray[i][0]
-
+                if(tokensArray[i][3].length>0){
+                    element.querySelector('.new-word').innerHTML = "<span style='font-weight: bold'>"+tokensArray[i][0]+"</span>"+tokensArray[i][3]
+                } else {
+                   element.querySelector('.new-word').innerHTML = tokensArray[i][0]
+                }
                 element.querySelector('.result-bar').style.width = prob+'%'
                 if(tokensArray[i][4] || tokensArray[i][5]){
                     element.querySelector('.new-word').classList.add("match-word");
