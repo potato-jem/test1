@@ -328,7 +328,8 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             console.log(prob)
             if(prob>=1){
                 if(tokensArray[i][3].length>0){
-                    element.querySelector('.new-word').innerHTML = "<span style='font-weight: bold'>"+tokensArray[i][0]+"</span>"+tokensArray[i][3]
+                    element.querySelector('.new-word').innerHTML = "<span>"+tokensArray[i][0]+"</span>"
+                                                                  +"<span style='color: grey'>"+tokensArray[i][3]+"</span>"
                 } else {
                    element.querySelector('.new-word').innerHTML = tokensArray[i][0]
                 }
