@@ -170,8 +170,9 @@ document.getElementById('generateButton').addEventListener('click', async () => 
         element.querySelector('.new-word').innerHTML = '';
         element.style.display = 'none';
         element.querySelector('.result-bar').style.width = 0;
-        element.querySelector('.new-word').classList.remove('match-word');
-        element.classList.remove("is-hidden");
+        element.querySelector('.result-bar').classList.remove('match-1-bar','match-2-bar');
+        element.querySelector('.new-word').classList.remove('match-1-text','match-2-text');
+        element.classList.remove('match-1','match-2','is-hidden');
     }
     document.getElementById('results').style.display = 'none';
     document.getElementById('stars').style.display = 'none';
@@ -262,9 +263,10 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                     if((target1.startsWith(keyt) || target2.startsWith(keyt)) && !(keyt.startsWith(target1) || keyt.startsWith(target2)) && keyt.length>0 && iteration==false && content==''){
                         let [iteratedTokensArray,score,dbitem] = await getResponse(chattext+" "+keyt,max_tokens,chat,num_logprobs,true);//,extra_message=key
                         content=iteratedTokensArray[0][3]
-                        keyt=(keyt+content).split(' ')[0]
                     }
-                    tokensArray.push([keyt,lp,key,content,keyt.startsWith(target1),keyt.startsWith(target2)]);
+                    word_content=content.split(' ')[0]
+                    word=keyt+word_content
+                    tokensArray.push([word,lp,keyt,word_content,word.startsWith(target1),word.startsWith(target2),key,content]);
                 }
             }
             target1_idx=tokensArray.findIndex(row => row[4] === true);
@@ -328,15 +330,23 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             console.log(prob)
             if(prob>=1){
                 if(tokensArray[i][3].length>0){
-                    element.querySelector('.new-word').innerHTML = "<span>"+tokensArray[i][0]+"</span>"
-                                                                  +"<span style='color: grey'>"+tokensArray[i][3]+"</span>"
+                    element.querySelector('.new-word').innerHTML = "<span>"+tokensArray[i][2]+"</span>"
+                                                                  +"<span style='opacity: 0.5'>"+tokensArray[i][3]+"</span>"
                 } else {
                    element.querySelector('.new-word').innerHTML = tokensArray[i][0]
                 }
                 element.querySelector('.result-bar').style.width = prob+'%'
-                if(tokensArray[i][4] || tokensArray[i][5]){
-                    element.querySelector('.new-word').classList.add("match-word");
+                if(tokensArray[i][4]){
+                    element.classList.add("match-1");
+                    element.querySelector('.new-word').classList.add("match-1-text");
+                    element.querySelector('.result-bar').classList.add("match-1-bar");
                 }
+                if(tokensArray[i][5]){
+                    element.classList.add("match-2");
+                    element.querySelector('.new-word').classList.add("match-2-text");
+                    element.querySelector('.result-bar').classList.add("match-2-bar");
+                }
+
             } else {
                 element.classList.add("is-hidden");
             }

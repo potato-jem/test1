@@ -1,7 +1,18 @@
+:root {
+    --primary-color: #ffd700;
+    --primary-color-transparent: #ffd70015;
+    --secondary-color: #8902ff;
+    --secondary-color-transparent: #8902ff30;
+    --text-color: #a29f9f;
+    --element-color: #2e2e2e;
+    --game-container-color: #1e1e1e;
+    --background-color:#121212;
+  }
+
 body {
     font-family: 'Arial', sans-serif;
-    background-color: #121212;
-    color: #e0e0e0;
+    background-color: var(--background-color);
+    color: var(--text-color);
     margin: 0;
     padding: 0;
     display: flex;
@@ -12,7 +23,7 @@ body {
 
 .game-container {
     width: 500px;
-    background-color: #1e1e1e;
+    background-color: var(--game-container-color);
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
     padding: 20px;
@@ -24,20 +35,19 @@ body {
     align-items: center;
     margin-bottom: 20px;
     font-size: 14px;
-    color: #b3b3b3;
+    color: ar(--text-color);
 }
 
 .arrow {
     cursor: pointer;
     padding: 5px;
-    font-size: 18px;
-    color: #FFD700;
+    font-size: 14px;
+    color: ar(--text-color);
 }
 
 .date {
-    font-weight: bold;
-    font-size: 16px;
-    color: #FFD700;
+    font-size: 14px;
+    color: ar(--text-color);
 }
 
 .content {
@@ -48,34 +58,38 @@ body {
 .instruction h2 {
     margin-bottom: 10px;
     font-size: 22px;
-    color: #e0e0e0;
+    color: var(--text-color);
     text-align: center;
 }
 
 .instruction p {
     margin-bottom: 20px;
     font-size: 16px;
-    color: #b3b3b3;
+    color: var(--text-color);
     text-align: center;
 }
 
 .targets {
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: 40px;
     margin-bottom: 20px;
 }
 
 .target-word {
-    background-color: #333;
+    background-color: var(--primary-color-transparent);
     padding: 15px;
     font-size: 20px;
     border-radius: 5px;
     width: 120px;
     text-align: center;
     font-weight: bold;
-    color: #FFD700;
-    border: 2px solid #FFD700;
+    color: var(--primary-color);
+}
+
+.secondary {
+    background-color: var(--secondary-color-transparent);
+    color: var(--secondary-color);
 }
 
 .answer-box {
@@ -86,10 +100,10 @@ textarea {
     width: 100%;
     padding: 12px;
     font-size: 16px;
-    border: 1px solid #666;
+    border: 1px solid var(--element-color);
     resize: none;
-    background-color: #1e1e1e;
-    color: #e0e0e0;
+    background-color: var(--game-container-color);
+    color: var(--text-color);
     border-radius: 5px;
     box-sizing: border-box;
 }
@@ -102,8 +116,8 @@ textarea {
 
 button {
     padding: 10px 20px;
-    background-color: #FFD700;
-    color: #1e1e1e;
+    background-color: var(--element-color);
+    color: var(--text-color);
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -112,7 +126,8 @@ button {
 }
 
 button:hover {
-    background-color: #e0c700;
+    background-color: var(--primary-color);
+    color: var(--game-container-color);
 }
 
 .result-item{
@@ -124,7 +139,7 @@ button:hover {
 }
 
 .results li {
-    background-color: #2e2e2e;
+    background-color: var(--element-color);
     padding: 10px;
     margin-bottom: 10px;
     font-size: 18px;
@@ -137,9 +152,23 @@ button:hover {
 .results li .new-word {
     font-size: 20px;
 }
-.results li .match-word {
-    font-size: 20px;
-    color: #FFD700;
+.match-1 {
+    background-color: var(--primary-color-transparent) !important;
+}
+.match-2 {
+    background-color: var(--secondary-color-transparent) !important;
+}
+.match-1-text {
+    color: var(--primary-color) !important;
+}
+.match-2-text {
+    color: var(--secondary-color) !important;
+}
+.match-1-bar {
+    background-color: var(--primary-color) !important;
+}
+.match-2-bar {
+    background-color: var(--secondary-color) !important;
 }
 .results li .best-word {
     position: absolute;
@@ -155,10 +184,12 @@ button:hover {
     left: 0;
     height: 3px;
     z-index: 0;
-    background-color: #666; 
+    background-color: var(--text-color); 
+    opacity: 0.3;
     transition: width 0.3s;
     border-radius: 3px;
 }
+
 
 .results li .content {
     position: relative;
@@ -174,14 +205,14 @@ button:hover {
 }
 
 .star {
-    color: #666;
+    color: var(--element-color);
     font-size: 30px;
     margin: 0 5px;
     transition: color 0.3s;
 }
 
 .star.filled {
-    color: #FFD700;
+    color: var(--primary-color);
 }
 
 
@@ -202,8 +233,8 @@ button:hover {
 #view-answer {
     padding: 8px 16px;
     border: none;
-    background-color: #444;
-    color: #e0e0e0;
+    background-color: var(--element-color);
+    color: var(--text-color);
     border-radius: 5px;
     cursor: pointer;
     font-size: 12px;
@@ -211,13 +242,13 @@ button:hover {
 }
 
 #view-answer:hover {
-    background-color: #555;
+    background-color: var(--primary-color);
 }
 
 .solution {
     margin-top: 20px;
     font-size: 16px;
-    color: #FFD700;
+    color: var(--text-color);
 }
 
 .start-hidden {
