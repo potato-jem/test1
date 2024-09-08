@@ -37,7 +37,11 @@ todaysDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 selectedDate = todaysDate;
 stale_id=""
 minDate=new Date(2024, 7, 27)
-maxDate=todaysDate
+maxDate=todaysDate;
+maxAttempts=5;
+attemptsRemaining=maxAttempts;
+attemptId=0;
+
 function setRandomWords(min,max) {
     let minI=all_words[2].findIndex((x)=>x>=min)
     let maxI=all_words[2].findIndex((x)=>x>max)
@@ -99,13 +103,48 @@ async function getTodaysWords(dateToUse=new Date(), env="TEST"){
         answer = data.answer;
         stale_id=docId;
         document.getElementById('info').innerHTML=JSON.stringify(data, null, 2);
+        return(data);
 }
 
+
+
+// Retrieve and parse the data from localStorage
+storedHistory = localStorage.getItem(selectedDate);
+if (storedHistory) {
+    parsedHistory = JSON.parse(storedHistory);
+    attemptsRemaining=maxAttempts-parsedHistory.attemptsMade;
+    console.log(parsedHistory);
+    if(parsedHistory.allAttempts.length>0){
+        latestAttempt=parsedHistory.allAttempts.at(-1);
+        document.getElementById('inputText').value=latestAttempt.prompt;
+        addFormatting(latestAttempt.result);
+        displayResults(false,score=latestAttempt.score);
+    }
+} else {
+    parsedHistory = {
+        date: selectedDate,
+        targetId: stale_id,
+        targets: [null,null],
+        attemptsMade: 0,
+        bestScore: null,
+        bestPrompt: null,
+        bestAttemptId: null,
+        allAttempts: []
+    };
+    // Store the data as a JSON string in localStorage
+    localStorage.setItem(selectedDate, JSON.stringify(parsedHistory));
+    attemptsRemaining=5;
+} 
+attemptId=parsedHistory.attemptsMade;
+let todaysWordData = getTodaysWords(dateToUse=selectedDate).then(result => {
+    parsedHistory.targets = [result.target1.trim(),result.target1.trim()];
+    localStorage.setItem(selectedDate, JSON.stringify(parsedHistory));
+});
 
 // function update
 
 //setRandomWords(+document.getElementById('minD').value,+document.getElementById('maxD').value);
-getTodaysWords(dateToUse=selectedDate);
+
 
 // document.getElementById('refreshWords').addEventListener('click', async () => {
 //     setRandomWords(+document.getElementById('minD').value,+document.getElementById('maxD').value);
@@ -149,6 +188,107 @@ document.getElementById('rightButton').addEventListener('click', async () => {
     }   
 )
 
+function clearFormatting(){
+    for (let i = 0; i < 5; i++) {
+        element=document.getElementById('result-word-'+(i+1))
+        element.querySelector('.new-word').innerHTML = '';
+        element.style.display = 'none';
+        element.querySelector('.result-bar').style.width = 0;
+        element.querySelector('.result-bar').classList.remove('match-1-bar','match-2-bar');
+        element.querySelector('.new-word').classList.remove('match-1-text','match-2-text');
+        element.classList.remove('match-1','match-2','is-hidden');
+    }
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('stars').style.display = 'none';
+    document.getElementById('star-1').classList.remove('filled', 'outline');
+    document.getElementById('star-2').classList.remove('filled', 'outline');
+    document.getElementById('star-3').classList.remove('filled', 'outline');
+}
+
+function addFormatting(tokensArray){
+    for (let i = 0; i < 5; i++) {
+        prob=100.0*tokensArray[i][1];
+        element=document.getElementById('result-word-'+(i+1))
+        console.log(prob)
+        if(prob>=1){
+            if(tokensArray[i][3].length>0){
+                element.querySelector('.new-word').innerHTML = "<span>"+tokensArray[i][2]+"</span>"
+                                                              +"<span style='opacity: 0.5'>"+tokensArray[i][3]+"</span>"
+            } else {
+               element.querySelector('.new-word').innerHTML = tokensArray[i][0]
+            }
+            element.querySelector('.result-bar').style.width = prob+'%'
+            if(tokensArray[i][4]){
+                element.classList.add("match-1");
+                element.querySelector('.new-word').classList.add("match-1-text");
+                element.querySelector('.result-bar').classList.add("match-1-bar");
+            }
+            if(tokensArray[i][5]){
+                element.classList.add("match-2");
+                element.querySelector('.new-word').classList.add("match-2-text");
+                element.querySelector('.result-bar').classList.add("match-2-bar");
+            }
+
+        } else {
+            element.classList.add("is-hidden");
+        }
+        
+    }
+}
+function displayResults(animation=true,score){
+    document.getElementById('results').style.display = 'block';
+            const intv=500;
+            // Simulate word predictions and score updates in the popup
+            if(animation){
+            setTimeout(function() {
+                if(document.getElementById('result-word-1').innerText!=""){
+                    document.getElementById('result-word-1').style.display = 'block';
+                }
+            }, 0);
+
+            setTimeout(function() {
+                document.getElementById('result-word-2').style.display = 'block';
+            }, 1*intv);
+
+            setTimeout(function() {
+                document.getElementById('result-word-3').style.display = 'block';
+            }, 2*intv);
+
+            setTimeout(function() {
+                document.getElementById('result-word-4').style.display = 'block';
+            }, 3*intv);
+
+            setTimeout(function() {
+                document.getElementById('result-word-5').style.display = 'block';
+            }, 4*intv);
+
+            setTimeout(function() {
+                document.getElementById('stars').style.display = 'block';
+                document.getElementById('star-1').classList.add(score >= 1 ? 'filled' : 'outline');
+            }, 5*intv);
+
+            setTimeout(function() {
+                document.getElementById('star-2').classList.add(score >= 2 ? 'filled' : 'outline');
+            }, 6*intv);
+
+            setTimeout(function() {
+                document.getElementById('star-3').classList.add(score >= 3 ? 'filled' : 'outline');
+                document.getElementById('viewAnswer').style.display = 'block';
+            }, 7*intv);
+        } else {
+            document.getElementById('result-word-1').style.display = 'block';
+            document.getElementById('result-word-2').style.display = 'block';
+            document.getElementById('result-word-3').style.display = 'block';
+            document.getElementById('result-word-4').style.display = 'block';
+            document.getElementById('result-word-5').style.display = 'block';
+            document.getElementById('stars').style.display = 'block';
+            document.getElementById('star-1').classList.add(score >= 1 ? 'filled' : 'outline');
+            document.getElementById('star-2').classList.add(score >= 2 ? 'filled' : 'outline');
+            document.getElementById('star-2').classList.add(score >= 3 ? 'filled' : 'outline');
+            document.getElementById('viewAnswer').style.display = 'block';
+        }
+}
+
 document.getElementById('generateButton').addEventListener('click', async () => {
     const inputText = document.getElementById('inputText').value;
     const outputDiv = document.getElementById('results');
@@ -165,20 +305,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
     const num_return= 10;//+document.getElementById('numReturn').value;//20;
     // const prefix= document.getElementById('prefix').value;//"continue this: ";
     // const model2 = document.getElementById('model2').value==='true';// true;
-    for (let i = 0; i < 5; i++) {
-        element=document.getElementById('result-word-'+(i+1))
-        element.querySelector('.new-word').innerHTML = '';
-        element.style.display = 'none';
-        element.querySelector('.result-bar').style.width = 0;
-        element.querySelector('.result-bar').classList.remove('match-1-bar','match-2-bar');
-        element.querySelector('.new-word').classList.remove('match-1-text','match-2-text');
-        element.classList.remove('match-1','match-2','is-hidden');
-    }
-    document.getElementById('results').style.display = 'none';
-    document.getElementById('stars').style.display = 'none';
-    document.getElementById('star-1').classList.remove('filled', 'outline');
-    document.getElementById('star-2').classList.remove('filled', 'outline');
-    document.getElementById('star-3').classList.remove('filled', 'outline');
+    clearFormatting()
 
     const system_instruction="Continue the sentence without repeating the prompt"
     const instruction_role="system"
@@ -324,76 +451,32 @@ document.getElementById('generateButton').addEventListener('click', async () => 
     try{
         let [tokensArray,score,dbitem] = await getResponse(inputText,max_tokens,true);
         console.log(tokensArray)
-        for (let i = 0; i < 5; i++) {
-            prob=100.0*tokensArray[i][1];
-            element=document.getElementById('result-word-'+(i+1))
-            console.log(prob)
-            if(prob>=1){
-                if(tokensArray[i][3].length>0){
-                    element.querySelector('.new-word').innerHTML = "<span>"+tokensArray[i][2]+"</span>"
-                                                                  +"<span style='opacity: 0.5'>"+tokensArray[i][3]+"</span>"
-                } else {
-                   element.querySelector('.new-word').innerHTML = tokensArray[i][0]
-                }
-                element.querySelector('.result-bar').style.width = prob+'%'
-                if(tokensArray[i][4]){
-                    element.classList.add("match-1");
-                    element.querySelector('.new-word').classList.add("match-1-text");
-                    element.querySelector('.result-bar').classList.add("match-1-bar");
-                }
-                if(tokensArray[i][5]){
-                    element.classList.add("match-2");
-                    element.querySelector('.new-word').classList.add("match-2-text");
-                    element.querySelector('.result-bar').classList.add("match-2-bar");
-                }
-
-            } else {
-                element.classList.add("is-hidden");
-            }
-            
+        
+        // Example: Updating specific parts of the data structure
+        parsedHistory.attemptsMade += 1;
+        attemptsRemaining -=1;
+        if(parsedHistory.bestScore===null | score>parsedHistory.bestScore){
+            parsedHistory.bestScore=score
+            parsedHistory.bestPrompt=inputText;
+            parsedHistory.bestAttemptId=attemptId;
         }
-
+        parsedHistory.allAttempts.push(
+            {
+            prompt: inputText,
+            sessionID: sessionStorage.getItem('sessionID'),
+            result: tokensArray,
+            score: score
+            }
+        )
+        attemptId+=1
+        localStorage.setItem(selectedDate, JSON.stringify(parsedHistory));
+        console.log(parsedHistory);
+        addFormatting(tokensArray);
+        displayResults(animation=true,score=score);
         //outputDiv.innerHTML  =  tokensArray.map(getFormattedText).join('\n');
         //scoreDiv.innerHTML  =  `Score: ${score}`;
         db.collection("responses").add(dbitem)
-        document.getElementById('results').style.display = 'block';
-            const intv=500;
-            // Simulate word predictions and score updates in the popup
-            setTimeout(function() {
-                if(document.getElementById('result-word-1').innerText!=""){
-                    document.getElementById('result-word-1').style.display = 'block';
-                }
-            }, 0);
-
-            setTimeout(function() {
-                document.getElementById('result-word-2').style.display = 'block';
-            }, 1*intv);
-
-            setTimeout(function() {
-                document.getElementById('result-word-3').style.display = 'block';
-            }, 2*intv);
-
-            setTimeout(function() {
-                document.getElementById('result-word-4').style.display = 'block';
-            }, 3*intv);
-
-            setTimeout(function() {
-                document.getElementById('result-word-5').style.display = 'block';
-            }, 4*intv);
-
-            setTimeout(function() {
-                document.getElementById('stars').style.display = 'block';
-                document.getElementById('star-1').classList.add(score >= 1 ? 'filled' : 'outline');
-            }, 5*intv);
-
-            setTimeout(function() {
-                document.getElementById('star-2').classList.add(score >= 2 ? 'filled' : 'outline');
-            }, 6*intv);
-
-            setTimeout(function() {
-                document.getElementById('star-3').classList.add(score >= 3 ? 'filled' : 'outline');
-                document.getElementById('viewAnswer').style.display = 'block';
-            }, 7*intv);
+        
 
         // if(model2){
         //     let [tokensArray2,score2,dbitem] = await getResponse(inputText,max_tokens,false);
