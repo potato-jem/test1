@@ -40,7 +40,7 @@ minDate=new Date(2024, 7, 27)
 maxDate=todaysDate;
 maxAttempts=5;
 attemptsRemaining=maxAttempts;
-attemptId=0;
+attemptId=1;
 
 function setRandomWords(min,max) {
     let minI=all_words[2].findIndex((x)=>x>=min)
@@ -103,44 +103,60 @@ async function getTodaysWords(dateToUse=new Date(), env="TEST"){
         answer = data.answer;
         stale_id=docId;
         document.getElementById('info').innerHTML=JSON.stringify(data, null, 2);
-        return(data);
+        getHistory(dateToUse,type="best",data.target1.trim(),data.target2.trim());
 }
 
 
-
+function getHistory(dateToUse,type="best",targets=[null,null],animation=false){
 // Retrieve and parse the data from localStorage
-storedHistory = localStorage.getItem(selectedDate);
-if (storedHistory) {
-    parsedHistory = JSON.parse(storedHistory);
-    attemptsRemaining=maxAttempts-parsedHistory.attemptsMade;
-    console.log(parsedHistory);
-    if(parsedHistory.allAttempts.length>0){
-        latestAttempt=parsedHistory.allAttempts.at(-1);
-        document.getElementById('inputText').value=latestAttempt.prompt;
-        addFormatting(latestAttempt.result);
-        displayResults(false,score=latestAttempt.score);
+    const storedHistory = localStorage.getItem(dateToUse);
+    console.log(type);
+    console.log(attemptId)
+    if (storedHistory) {
+        parsedHistory = JSON.parse(storedHistory);
+        console.log(parsedHistory);
+        if(parsedHistory.allAttempts.length>0){
+            if(type=="best"){
+                attemptId=parsedHistory.bestAttemptId;
+            } else if (type=="latest"){
+                attemptId=parsedHistory.allAttempts.length;
+            } else if (type=="previous"){
+                attemptId=Math.max(1,attemptId-1);
+            } else if (type=="next"){
+                attemptId=Math.min(attemptId+1,parsedHistory.allAttempts.length);
+            } else {
+                attemptId=type;
+            }
+            var attempt = parsedHistory.allAttempts.at(attemptId-1);
+            clearFormatting();
+            document.getElementById('inputText').value=attempt.prompt;
+            addFormatting(attempt.result);
+            displayResults(animation,score=attempt.score);
+        } else {
+            document.getElementById('inputText').value="";
+            attemptId=1;
+        }
+    } else {
+        parsedHistory = {
+            date: dateToUse,
+            targetId: stale_id,
+            targets: [targets[1],targets[2]],
+            attemptsMade: 0,
+            bestScore: null,
+            bestPrompt: null,
+            bestAttemptId: null,
+            allAttempts: []
+        };
+        // Store the data as a JSON string in localStorage
+        localStorage.setItem(selectedDate, JSON.stringify(parsedHistory));
+        document.getElementById('inputText').value="";
+        attemptId=1;
+        clearFormatting();
     }
-} else {
-    parsedHistory = {
-        date: selectedDate,
-        targetId: stale_id,
-        targets: [null,null],
-        attemptsMade: 0,
-        bestScore: null,
-        bestPrompt: null,
-        bestAttemptId: null,
-        allAttempts: []
-    };
-    // Store the data as a JSON string in localStorage
-    localStorage.setItem(selectedDate, JSON.stringify(parsedHistory));
-    attemptsRemaining=5;
-} 
-attemptId=parsedHistory.attemptsMade;
-let todaysWordData = getTodaysWords(dateToUse=selectedDate).then(result => {
-    parsedHistory.targets = [result.target1.trim(),result.target1.trim()];
-    localStorage.setItem(selectedDate, JSON.stringify(parsedHistory));
-});
-
+    parsedHistory.attemptsRemaining=maxAttempts-parsedHistory.attemptsMade; 
+    
+}
+getTodaysWords(dateToUse=selectedDate);
 // function update
 
 //setRandomWords(+document.getElementById('minD').value,+document.getElementById('maxD').value);
@@ -153,13 +169,14 @@ let todaysWordData = getTodaysWords(dateToUse=selectedDate).then(result => {
 document.getElementById('viewAnswer').addEventListener('click', async () => {
     answerId=document.getElementById('answerID');
     answerId.innerHTML  =  `Possible answer: ${answer}`;
-    document.getElementById('answerID').style.display = 'block';
-    document.getElementById('info').style.display = 'block';
+
+    document.getElementById('answerID').classList.remove("is-hidden");
+    document.getElementById('info').classList.remove("is-hidden");
 });
 document.getElementById('hideAnswer').addEventListener('click', async () => {
-    answerId=document.getElementById('answerID');
-    answerId.innerHTML  =  "";
-    document.getElementById('info').style.display = 'none';
+    document.getElementById('answerID').innerHTML  =  "";
+    document.getElementById('answerID').classList.add("is-hidden");
+    document.getElementById('info').classList.add("is-hidden");
 });
 async function updateDocument(collectionName, documentId, updatedData) {
     try {
@@ -187,6 +204,14 @@ document.getElementById('rightButton').addEventListener('click', async () => {
         }   
     }   
 )
+document.getElementById('leftButtonAnswer').addEventListener('click', async () => {
+    getHistory(selectedDate,"previous")
+}
+)
+document.getElementById('rightButtonAnswer').addEventListener('click', async () => {
+    getHistory(selectedDate,"next")
+}
+)
 
 function clearFormatting(){
     for (let i = 0; i < 5; i++) {
@@ -198,11 +223,19 @@ function clearFormatting(){
         element.querySelector('.new-word').classList.remove('match-1-text','match-2-text');
         element.classList.remove('match-1','match-2','is-hidden');
     }
+    if(attemptId<=1){
+        document.getElementById('leftButtonAnswer').classList.add("is-hidden");
+        document.getElementById('rightButtonAnswer').classList.add("is-hidden");
+        document.getElementById('attemptNumber').classList.add("is-hidden");
+    }
     document.getElementById('results').style.display = 'none';
     document.getElementById('stars').style.display = 'none';
     document.getElementById('star-1').classList.remove('filled', 'outline');
     document.getElementById('star-2').classList.remove('filled', 'outline');
     document.getElementById('star-3').classList.remove('filled', 'outline');
+    document.getElementById('answerID').innerHTML  =  "";
+    document.getElementById('answerID').classList.add("is-hidden");
+    document.getElementById('info').classList.add("is-hidden");
 }
 
 function addFormatting(tokensArray){
@@ -233,6 +266,20 @@ function addFormatting(tokensArray){
             element.classList.add("is-hidden");
         }
         
+    }
+    document.getElementById('attemptNumber').classList.remove("is-hidden");
+    document.getElementById('leftButtonAnswer').classList.remove("is-hidden");
+    document.getElementById('rightButtonAnswer').classList.remove("is-hidden");
+    document.getElementById('attemptNumber').innerText=attemptId+"/"+maxAttempts;
+    if(attemptId>=parsedHistory.allAttempts.length){
+        document.getElementById('rightButtonAnswer').classList.add("is-invisible");
+    } else {
+     document.getElementById('rightButtonAnswer').classList.remove("is-hidden","is-invisible");
+    } 
+    if(attemptId==1){
+        document.getElementById('leftButtonAnswer').classList.add("is-invisible");
+    } else {
+        document.getElementById('leftButtonAnswer').classList.remove("is-hidden","is-invisible");
     }
 }
 function displayResults(animation=true,score){
@@ -289,6 +336,7 @@ function displayResults(animation=true,score){
         }
 }
 
+
 document.getElementById('generateButton').addEventListener('click', async () => {
     const inputText = document.getElementById('inputText').value;
     const outputDiv = document.getElementById('results');
@@ -305,7 +353,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
     const num_return= 10;//+document.getElementById('numReturn').value;//20;
     // const prefix= document.getElementById('prefix').value;//"continue this: ";
     // const model2 = document.getElementById('model2').value==='true';// true;
-    clearFormatting()
+    clearFormatting();
 
     const system_instruction="Continue the sentence without repeating the prompt"
     const instruction_role="system"
@@ -449,33 +497,40 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             else return `${text}`;
         }
     try{
-        let [tokensArray,score,dbitem] = await getResponse(inputText,max_tokens,true);
-        console.log(tokensArray)
-        
-        // Example: Updating specific parts of the data structure
-        parsedHistory.attemptsMade += 1;
-        attemptsRemaining -=1;
-        if(parsedHistory.bestScore===null | score>parsedHistory.bestScore){
-            parsedHistory.bestScore=score
-            parsedHistory.bestPrompt=inputText;
-            parsedHistory.bestAttemptId=attemptId;
-        }
-        parsedHistory.allAttempts.push(
-            {
-            prompt: inputText,
-            sessionID: sessionStorage.getItem('sessionID'),
-            result: tokensArray,
-            score: score
+        existing_answer=parsedHistory.allAttempts.findIndex(item => item.prompt == inputText );
+
+        if(existing_answer>=0){
+            // const attempt=parsedHistory.allAttempts[existing_answer];
+            // let tokensArray = attempt.result;
+            // let score = attempt.score;
+            getHistory(selectedDate,type=existing_answer+1,targets=[],animation=true);
+        } else {
+            let [tokensArray,score,dbitem] = await getResponse(inputText,max_tokens,true);
+            db.collection("responses").add(dbitem)
+            parsedHistory.attemptsMade += 1;
+            parsedHistory.attemptsRemaining -=1;
+            if(parsedHistory.bestScore===null | score>parsedHistory.bestScore | parsedHistory.bestScore==0){
+                parsedHistory.bestScore=score
+                parsedHistory.bestPrompt=inputText;
+                parsedHistory.bestAttemptId=attemptId;
             }
-        )
-        attemptId+=1
-        localStorage.setItem(selectedDate, JSON.stringify(parsedHistory));
-        console.log(parsedHistory);
-        addFormatting(tokensArray);
-        displayResults(animation=true,score=score);
+            addFormatting(tokensArray);
+            displayResults(animation=true,score=score);
+            parsedHistory.allAttempts.push(
+                {
+                prompt: inputText,
+                sessionID: sessionStorage.getItem('sessionID'),
+                result: tokensArray,
+                score: score
+                }
+            )
+            attemptId+=1;
+            document.getElementById('attemptNumber').innerText=attemptId+"/"+maxAttempts;
+            localStorage.setItem(selectedDate, JSON.stringify(parsedHistory));
+        }
+
         //outputDiv.innerHTML  =  tokensArray.map(getFormattedText).join('\n');
         //scoreDiv.innerHTML  =  `Score: ${score}`;
-        db.collection("responses").add(dbitem)
         
 
         // if(model2){

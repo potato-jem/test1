@@ -32,6 +32,11 @@
             <div class="buttons">
                 <button id="generateButton">Submit</button>
             </div>
+            <div class="info">
+                <span class="arrow is-hidden" id="leftButtonAnswer">&lt;</span>
+                <span class="instruction is-hidden" id="attemptNumber"></span>
+                <span class="arrow is-hidden" id="rightButtonAnswer">&gt;</span>
+            </div>
 
             <div class="results" id="results" style="display: none;">
                 <ul id="result-words">
@@ -79,8 +84,8 @@
                 <button id="hideAnswer" style="display: none;">Hide Solution</button>
             </div>
 
-            <div class="solution" id="answerID" style="display:none;"> </div>
-            <div id="info" class="start-hidden"></div>
+            <div class="solution is-hidden" id="answerID"> </div>
+            <div id="info" class="is-hidden"></div>
         </div>
     </div>
 
