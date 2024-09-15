@@ -30,12 +30,14 @@
             </div>
 
             <div class="buttons">
+                <div class="info">
+                </div>
                 <button id="generateButton">Submit</button>
-            </div>
-            <div class="info">
-                <span class="arrow is-hidden" id="leftButtonAnswer">&lt;</span>
-                <span class="instruction is-hidden" id="attemptNumber"></span>
-                <span class="arrow is-hidden" id="rightButtonAnswer">&gt;</span>
+                <div class="info">
+                    <span class="arrow is-hidden" id="leftButtonAnswer">&lt;</span>
+                    <span class="attempt is-hidden" id="attemptNumber"></span>
+                    <span class="arrow is-hidden" id="rightButtonAnswer">&gt;</span>
+                </div>
             </div>
 
             <div class="results" id="results" style="display: none;">
@@ -80,7 +82,7 @@
             </div>
 
             <div class="view-answer-container">
-                <button id="viewAnswer" style="display: none;">View Solution</button>
+                <button class="is-hidden" id="viewAnswer">View Solution</button>
                 <button id="hideAnswer" style="display: none;">Hide Solution</button>
             </div>
 

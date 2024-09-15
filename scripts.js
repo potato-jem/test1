@@ -36,7 +36,7 @@ now = new Date();
 todaysDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 selectedDate = todaysDate;
 stale_id=""
-minDate=new Date(2024, 7, 27)
+minDate=new Date(2024, 16, 9)
 maxDate=todaysDate;
 maxAttempts=5;
 attemptsRemaining=maxAttempts;
@@ -58,7 +58,7 @@ function setRandomWords(min,max) {
     return(out)
 }
 
-async function getTodaysWords(dateToUse=new Date(), env="TEST"){
+async function getTodaysWords(dateToUse=new Date(), env="TEST2"){
     //todaysDate = new Intl.DateTimeFormat('en-CA').format(new Date());
     // const referenceDate = new Date('2024-08-20'); 
     // Convert the time difference from milliseconds to days
@@ -103,18 +103,15 @@ async function getTodaysWords(dateToUse=new Date(), env="TEST"){
         answer = data.answer;
         stale_id=docId;
         document.getElementById('info').innerHTML=JSON.stringify(data, null, 2);
-        getHistory(dateToUse,type="best",data.target1.trim(),data.target2.trim());
+        getHistory(dateToUse,type="best",targets=[data.target1.trim(),data.target2.trim()],animation=false);
 }
 
 
 function getHistory(dateToUse,type="best",targets=[null,null],animation=false){
 // Retrieve and parse the data from localStorage
     const storedHistory = localStorage.getItem(dateToUse);
-    console.log(type);
-    console.log(attemptId)
     if (storedHistory) {
         parsedHistory = JSON.parse(storedHistory);
-        console.log(parsedHistory);
         if(parsedHistory.allAttempts.length>0){
             if(type=="best"){
                 attemptId=parsedHistory.bestAttemptId;
@@ -135,6 +132,7 @@ function getHistory(dateToUse,type="best",targets=[null,null],animation=false){
         } else {
             document.getElementById('inputText').value="";
             attemptId=1;
+            clearFormatting();
         }
     } else {
         parsedHistory = {
@@ -170,8 +168,10 @@ document.getElementById('viewAnswer').addEventListener('click', async () => {
     answerId=document.getElementById('answerID');
     answerId.innerHTML  =  `Possible answer: ${answer}`;
 
+    if(!document.getElementById('answerID').classList.contains("is-hidden")){
+        document.getElementById('info').classList.remove("is-hidden");
+    }
     document.getElementById('answerID').classList.remove("is-hidden");
-    document.getElementById('info').classList.remove("is-hidden");
 });
 document.getElementById('hideAnswer').addEventListener('click', async () => {
     document.getElementById('answerID').innerHTML  =  "";
@@ -205,23 +205,25 @@ document.getElementById('rightButton').addEventListener('click', async () => {
     }   
 )
 document.getElementById('leftButtonAnswer').addEventListener('click', async () => {
-    getHistory(selectedDate,"previous")
+    getHistory(selectedDate,type="previous",animation=false)
 }
 )
 document.getElementById('rightButtonAnswer').addEventListener('click', async () => {
-    getHistory(selectedDate,"next")
+    getHistory(selectedDate,type="next",animation=false)
 }
 )
 
 function clearFormatting(){
     for (let i = 0; i < 5; i++) {
-        element=document.getElementById('result-word-'+(i+1))
-        element.querySelector('.new-word').innerHTML = '';
-        element.style.display = 'none';
+        var element=document.getElementById('result-word-'+(i+1))
+        element.querySelector('.new-word').innerHTML = "";
+        // element.style.display = 'none';
+        element.classList.add("is-hidden");
+        element.classList.remove("found-word")
         element.querySelector('.result-bar').style.width = 0;
         element.querySelector('.result-bar').classList.remove('match-1-bar','match-2-bar');
         element.querySelector('.new-word').classList.remove('match-1-text','match-2-text');
-        element.classList.remove('match-1','match-2','is-hidden');
+        element.classList.remove('match-1','match-2');
     }
     if(attemptId<=1){
         document.getElementById('leftButtonAnswer').classList.add("is-hidden");
@@ -233,17 +235,19 @@ function clearFormatting(){
     document.getElementById('star-1').classList.remove('filled', 'outline');
     document.getElementById('star-2').classList.remove('filled', 'outline');
     document.getElementById('star-3').classList.remove('filled', 'outline');
+    document.getElementById('viewAnswer').classList.add("is-hidden");
     document.getElementById('answerID').innerHTML  =  "";
     document.getElementById('answerID').classList.add("is-hidden");
     document.getElementById('info').classList.add("is-hidden");
 }
 
 function addFormatting(tokensArray){
+    console.log("ADD")
     for (let i = 0; i < 5; i++) {
         prob=100.0*tokensArray[i][1];
-        element=document.getElementById('result-word-'+(i+1))
-        console.log(prob)
+        var element=document.getElementById('result-word-'+(i+1))
         if(prob>=1){
+            element.classList.add("found-word");
             if(tokensArray[i][3].length>0){
                 element.querySelector('.new-word').innerHTML = "<span>"+tokensArray[i][2]+"</span>"
                                                               +"<span style='opacity: 0.5'>"+tokensArray[i][3]+"</span>"
@@ -270,7 +274,7 @@ function addFormatting(tokensArray){
     document.getElementById('attemptNumber').classList.remove("is-hidden");
     document.getElementById('leftButtonAnswer').classList.remove("is-hidden");
     document.getElementById('rightButtonAnswer').classList.remove("is-hidden");
-    document.getElementById('attemptNumber').innerText=attemptId+"/"+maxAttempts;
+    document.getElementById('attemptNumber').innerHTML="Attempt<br>"+attemptId+"/"+maxAttempts;
     if(attemptId>=parsedHistory.allAttempts.length){
         document.getElementById('rightButtonAnswer').classList.add("is-invisible");
     } else {
@@ -283,60 +287,54 @@ function addFormatting(tokensArray){
     }
 }
 function displayResults(animation=true,score){
+    console.log("DISPLAY")
     document.getElementById('results').style.display = 'block';
-            const intv=500;
-            // Simulate word predictions and score updates in the popup
-            if(animation){
-            setTimeout(function() {
-                if(document.getElementById('result-word-1').innerText!=""){
-                    document.getElementById('result-word-1').style.display = 'block';
+    const intv=500;
+    // Simulate word predictions and score updates in the popup
+    if(animation){
+        var c=0
+        for (let i = 0; i < 5; i++) {
+            var element=document.getElementById('result-word-'+(i+1))
+            if(element.classList.contains("found-word")){
+                setTimeout(function() {
+                    var element=document.getElementById('result-word-'+(i+1))
+                    element.classList.remove("is-hidden");
+                }, c*intv);
+                c+=1
                 }
-            }, 0);
-
-            setTimeout(function() {
-                document.getElementById('result-word-2').style.display = 'block';
-            }, 1*intv);
-
-            setTimeout(function() {
-                document.getElementById('result-word-3').style.display = 'block';
-            }, 2*intv);
-
-            setTimeout(function() {
-                document.getElementById('result-word-4').style.display = 'block';
-            }, 3*intv);
-
-            setTimeout(function() {
-                document.getElementById('result-word-5').style.display = 'block';
-            }, 4*intv);
-
-            setTimeout(function() {
-                document.getElementById('stars').style.display = 'block';
-                document.getElementById('star-1').classList.add(score >= 1 ? 'filled' : 'outline');
-            }, 5*intv);
-
-            setTimeout(function() {
-                document.getElementById('star-2').classList.add(score >= 2 ? 'filled' : 'outline');
-            }, 6*intv);
-
-            setTimeout(function() {
-                document.getElementById('star-3').classList.add(score >= 3 ? 'filled' : 'outline');
-                document.getElementById('viewAnswer').style.display = 'block';
-            }, 7*intv);
-        } else {
-            document.getElementById('result-word-1').style.display = 'block';
-            document.getElementById('result-word-2').style.display = 'block';
-            document.getElementById('result-word-3').style.display = 'block';
-            document.getElementById('result-word-4').style.display = 'block';
-            document.getElementById('result-word-5').style.display = 'block';
-            document.getElementById('stars').style.display = 'block';
-            document.getElementById('star-1').classList.add(score >= 1 ? 'filled' : 'outline');
-            document.getElementById('star-2').classList.add(score >= 2 ? 'filled' : 'outline');
-            document.getElementById('star-2').classList.add(score >= 3 ? 'filled' : 'outline');
-            document.getElementById('viewAnswer').style.display = 'block';
         }
+        setTimeout(function() {
+            document.getElementById('stars').style.display = 'block';
+            document.getElementById('star-1').classList.add(score > 0 ? 'filled' : 'outline');
+        }, c*intv);
+
+        setTimeout(function() {
+            document.getElementById('star-2').classList.add(score >= 0.2 ? 'filled' : 'outline');
+        }, (c+1)*intv);
+
+        setTimeout(function() {
+            document.getElementById('star-3').classList.add(score >= 0.8 ? 'filled' : 'outline');
+            document.getElementById('viewAnswer').classList.remove("is-hidden");
+        }, (c+2)*intv);
+    } else {
+        for (let i = 0; i < 5; i++) {
+            var element = document.getElementById('result-word-'+(i+1));
+            if(element.classList.contains("found-word")){
+                element.classList.remove("is-hidden");
+            }
+        }
+        document.getElementById('stars').style.display = 'block';
+        document.getElementById('star-1').classList.add(score > 0 ? 'filled' : 'outline');
+        document.getElementById('star-2').classList.add(score >= 0.2 ? 'filled' : 'outline');
+        document.getElementById('star-3').classList.add(score >= 0.8 ? 'filled' : 'outline');
+        document.getElementById('viewAnswer').classList.remove("is-hidden");
+    }
 }
 
-
+function getScore(prob2, contextLength, k = 25, j = 0.2, desiredMaxLength = 5, lengthWeight = 0.1) {
+    const scoreBase = 1 / (1 + Math.exp(-k * (prob2 - j)));
+    return scoreBase * Math.exp(-Math.max(contextLength - desiredMaxLength, 0) * lengthWeight);
+}
 document.getElementById('generateButton').addEventListener('click', async () => {
     const inputText = document.getElementById('inputText').value;
     const outputDiv = document.getElementById('results');
@@ -414,7 +412,6 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                 data.choices[0].logprobs.tokens[0];
             }
             const tokensArray = [] ;
-            console.log(tokens)
             for (const token in tokens) {
                 //consider what happens if there is trailing space?
                 let key = tokens[token][0];
@@ -446,14 +443,19 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             }
             target1_idx=tokensArray.findIndex(row => row[4] === true);
             target2_idx=tokensArray.findIndex(row => row[5] === true);
-            let score=0
+            
+            tokensArray.sort((a, b) => b[1] - a[1]);
+
+            let score = 0;
             if (target1_idx==-1 || target2_idx==-1){
-                score=0
+                score = 0;
+            } else if(tokensArray[target1_idx][1]<0.01 || tokensArray[target2_idx][1]<0.01) {
+                score = 0;
             } else {
-                score = Math.max(0,5-Math.max(target1_idx,target2_idx))
+                //score = Math.max(0,5-Math.max(target1_idx,target2_idx))
+                score = getScore(Math.min(tokensArray[target1_idx][1],tokensArray[target2_idx][1]), 5);
             }
 
-            tokensArray.sort((a, b) => b[1] - a[1]);
             let dbitem = {
                 timestamp: Date.now(),
                 userID: localStorage.getItem('userID'),
@@ -504,6 +506,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             // let tokensArray = attempt.result;
             // let score = attempt.score;
             getHistory(selectedDate,type=existing_answer+1,targets=[],animation=true);
+            console.log(parsedHistory.allAttempts.at(existing_answer).result)
         } else {
             let [tokensArray,score,dbitem] = await getResponse(inputText,max_tokens,true);
             db.collection("responses").add(dbitem)
@@ -514,6 +517,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                 parsedHistory.bestPrompt=inputText;
                 parsedHistory.bestAttemptId=attemptId;
             }
+            clearFormatting();
             addFormatting(tokensArray);
             displayResults(animation=true,score=score);
             parsedHistory.allAttempts.push(
@@ -525,10 +529,9 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                 }
             )
             attemptId+=1;
-            document.getElementById('attemptNumber').innerText=attemptId+"/"+maxAttempts;
             localStorage.setItem(selectedDate, JSON.stringify(parsedHistory));
         }
-
+        console.log(parsedHistory)
         //outputDiv.innerHTML  =  tokensArray.map(getFormattedText).join('\n');
         //scoreDiv.innerHTML  =  `Score: ${score}`;
         
