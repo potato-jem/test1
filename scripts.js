@@ -236,6 +236,7 @@ function clearFormatting(){
     document.getElementById('star-2').classList.remove('filled', 'outline');
     document.getElementById('star-3').classList.remove('filled', 'outline');
     document.getElementById('viewAnswer').classList.add("is-hidden");
+    document.getElementById('score').classList.add("is-hidden");
     document.getElementById('answerID').innerHTML  =  "";
     document.getElementById('answerID').classList.add("is-hidden");
     document.getElementById('info').classList.add("is-hidden");
@@ -313,7 +314,9 @@ function displayResults(animation=true,score){
         }, (c+1)*intv);
 
         setTimeout(function() {
-            document.getElementById('star-3').classList.add(score >= 0.8 ? 'filled' : 'outline');
+            document.getElementById('star-3').classList.add(score >= 0.7 ? 'filled' : 'outline');
+            document.getElementById('score').innerHTML="score: "+Math.round(score*100)+"["+Math.round(parsedHistory.bestScore*100)+"]";
+            document.getElementById('score').classList.remove("is-hidden");
             document.getElementById('viewAnswer').classList.remove("is-hidden");
         }, (c+2)*intv);
     } else {
@@ -326,7 +329,9 @@ function displayResults(animation=true,score){
         document.getElementById('stars').style.display = 'block';
         document.getElementById('star-1').classList.add(score > 0 ? 'filled' : 'outline');
         document.getElementById('star-2').classList.add(score >= 0.2 ? 'filled' : 'outline');
-        document.getElementById('star-3').classList.add(score >= 0.8 ? 'filled' : 'outline');
+        document.getElementById('star-3').classList.add(score >= 0.7 ? 'filled' : 'outline');
+        document.getElementById('score').innerHTML="score: "+Math.round(score*100)+" ["+Math.round(parsedHistory.bestScore*100)+"]";//"score: "+Math.round(score*100)+"<br>"+"best: "+Math.round(parsedHistory.bestScore*100);
+        document.getElementById('score').classList.remove("is-hidden");
         document.getElementById('viewAnswer').classList.remove("is-hidden");
     }
 }
@@ -484,20 +489,6 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             return([tokensArray,score,dbitem])
         }
 
-        function getFormattedText([key, value,a,b,c,d]){
-            let extra = ""
-            if (b.length>0){
-                extra=` (${b.trim()})`
-            }
-            const text = `${key} <span class="small">${(value*100).toFixed(1)}${extra}</span>`;
-            if(c){
-                return `<span class="highlight1">${text}</span>`;
-            }
-            if(d){
-                return `<span class="highlight2">${text}</span>`;
-            }
-            else return `${text}`;
-        }
     try{
         existing_answer=parsedHistory.allAttempts.findIndex(item => item.prompt == inputText );
 
@@ -511,6 +502,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             let [tokensArray,score,dbitem] = await getResponse(inputText,max_tokens,true);
             db.collection("responses").add(dbitem)
             parsedHistory.attemptsMade += 1;
+            attemptId=parsedHistory.attemptsMade;
             parsedHistory.attemptsRemaining -=1;
             if(parsedHistory.bestScore===null | score>parsedHistory.bestScore | parsedHistory.bestScore==0){
                 parsedHistory.bestScore=score
@@ -528,7 +520,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                 score: score
                 }
             )
-            attemptId+=1;
+            // attemptId+=1;
             localStorage.setItem(selectedDate, JSON.stringify(parsedHistory));
         }
         console.log(parsedHistory)
@@ -541,11 +533,6 @@ document.getElementById('generateButton').addEventListener('click', async () => 
         //     outputDiv2.innerHTML = tokensArray2.map(getFormattedText).join('\n');
         // }
 
-        if (true) {
-            
-        } else {
-            outputDiv.textContent = `Error: ${data.error.message}`;
-        }
     } catch (error) {
         outputDiv.textContent = `Error: ${error.message}`;
     }
