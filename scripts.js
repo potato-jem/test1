@@ -36,7 +36,7 @@ now = new Date();
 todaysDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 selectedDate = todaysDate;
 stale_id=""
-minDate=new Date(2024, 8, 16) //Month is zero indexed
+minDate=new Date(2024, 9, 8) //Month is zero indexed
 maxDate=todaysDate;
 maxAttempts=5;
 attemptsRemaining=maxAttempts;
@@ -58,7 +58,7 @@ function setRandomWords(min,max) {
     return(out)
 }
 
-async function getTodaysWords(dateToUse=new Date(), env="TEST2"){
+async function getTodaysWords(dateToUse=new Date(), env="PROD"){
     //todaysDate = new Intl.DateTimeFormat('en-CA').format(new Date());
     // const referenceDate = new Date('2024-08-20'); 
     // Convert the time difference from milliseconds to days
