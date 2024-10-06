@@ -58,7 +58,7 @@ function setRandomWords(min,max) {
     return(out)
 }
 
-async function getTodaysWords(dateToUse=new Date(), env="PROD"){
+async function getTodaysWords(dateToUse=new Date(), env="PROD1"){
     //todaysDate = new Intl.DateTimeFormat('en-CA').format(new Date());
     // const referenceDate = new Date('2024-08-20'); 
     // Convert the time difference from milliseconds to days
@@ -310,11 +310,11 @@ function displayResults(animation=true,score){
         }, c*intv);
 
         setTimeout(function() {
-            document.getElementById('star-2').classList.add(score >= 0.2 ? 'filled' : 'outline');
+            document.getElementById('star-2').classList.add(score >= 0.65 ? 'filled' : 'outline');
         }, (c+1)*intv);
 
         setTimeout(function() {
-            document.getElementById('star-3').classList.add(score >= 0.7 ? 'filled' : 'outline');
+            document.getElementById('star-3').classList.add(score >= 0.85 ? 'filled' : 'outline');
             document.getElementById('score').innerHTML="score: "+Math.round(score*100)+"["+Math.round(parsedHistory.bestScore*100)+"]";
             document.getElementById('score').classList.remove("is-hidden");
             document.getElementById('viewAnswer').classList.remove("is-hidden");
@@ -336,7 +336,13 @@ function displayResults(animation=true,score){
     }
 }
 
-function getScore(prob2, contextLength, k = 25, j = 0.2, desiredMaxLength = 5, lengthWeight = 0.1) {
+function getScore(prob1, prob2, pos, contextLength, k = 25, j = 0.2, desiredMaxLength = 5, lengthWeight = 0.1) {
+    const scoreBase = 1 / (1 + Math.exp(-k * (prob2 - j)));
+    const lengthAdj = Math.exp(-Math.max(contextLength - desiredMaxLength, 0) * lengthWeight);
+    const positionScore = (6.0-pos)/4.0
+    return 0.2*scoreBase*lengthAdj + 0.5*positionScore + 0.3*(prob1 + prob2) ;
+}
+function getScore_original(prob2, contextLength, k = 25, j = 0.2, desiredMaxLength = 5, lengthWeight = 0.1) {
     const scoreBase = 1 / (1 + Math.exp(-k * (prob2 - j)));
     return scoreBase * Math.exp(-Math.max(contextLength - desiredMaxLength, 0) * lengthWeight);
 }
@@ -458,7 +464,13 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                 score = 0;
             } else {
                 //score = Math.max(0,5-Math.max(target1_idx,target2_idx))
-                score = getScore(Math.min(tokensArray[target1_idx][1],tokensArray[target2_idx][1]), 5);
+                prob1= Math.max(tokensArray[target1_idx][1],tokensArray[target2_idx][1])
+                prob2= Math.min(tokensArray[target1_idx][1],tokensArray[target2_idx][1])
+                console.log("score")
+                console.log(prob1)
+                console.log(prob2)
+                console.log(Math.max(target1_idx,target2_idx)+1)
+                score = getScore(prob1,prob2,Math.max(target1_idx,target2_idx)+1, 5);
             }
 
             let dbitem = {
