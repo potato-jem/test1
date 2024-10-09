@@ -250,6 +250,7 @@ function clearFormatting(){
     document.getElementById('star-2').classList.remove('filled', 'outline');
     document.getElementById('star-3').classList.remove('filled', 'outline');
     document.getElementById('viewAnswer').classList.add("is-hidden");
+    document.getElementById('viewAnswer').classList.remove("viewedSolution");
     document.getElementById('score').classList.add("is-hidden");
     document.getElementById('answerID').innerHTML  =  "";
     document.getElementById('answerID').classList.add("is-hidden");
