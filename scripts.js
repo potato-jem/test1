@@ -143,7 +143,8 @@ function getHistory(dateToUse,type="best",targets=[null,null],animation=false){
             bestScore: null,
             bestPrompt: null,
             bestAttemptId: null,
-            allAttempts: []
+            allAttempts: [],
+            solutionViewed: false
         };
         // Store the data as a JSON string in localStorage
         localStorage.setItem(selectedDate, JSON.stringify(parsedHistory));
@@ -151,7 +152,10 @@ function getHistory(dateToUse,type="best",targets=[null,null],animation=false){
         attemptId=1;
         clearFormatting();
     }
-    parsedHistory.attemptsRemaining=maxAttempts-parsedHistory.attemptsMade; 
+    parsedHistory.attemptsRemaining=maxAttempts-parsedHistory.attemptsMade;
+    if(parsedHistory.solutionViewed==true){
+        viewAnswer()
+    } 
     
 }
 getTodaysWords(dateToUse=selectedDate);
@@ -163,8 +167,7 @@ getTodaysWords(dateToUse=selectedDate);
 // document.getElementById('refreshWords').addEventListener('click', async () => {
 //     setRandomWords(+document.getElementById('minD').value,+document.getElementById('maxD').value);
 // });
-
-document.getElementById('viewAnswer').addEventListener('click', async () => {
+function viewAnswer(){
     answerId=document.getElementById('answerID');
     answerId.innerHTML  =  `Possible answer: ${answer}`;
 
@@ -172,6 +175,17 @@ document.getElementById('viewAnswer').addEventListener('click', async () => {
         document.getElementById('info').classList.remove("is-hidden");
     }
     document.getElementById('answerID').classList.remove("is-hidden");
+    document.getElementById('viewAnswer').classList.add("viewedSolution");
+    //parsedHistory.attemptsMade=maxAttempts;
+    parsedHistory.attemptsRemaining=0;
+    parsedHistory.solutionViewed=true;
+    document.getElementById('generateButton').classList.add("is-disabled")
+    document.getElementById('generateButton').disabled=true;
+    localStorage.setItem(selectedDate, JSON.stringify(parsedHistory))
+}
+
+document.getElementById('viewAnswer').addEventListener('click', async () => {
+    viewAnswer()
 });
 document.getElementById('hideAnswer').addEventListener('click', async () => {
     document.getElementById('answerID').innerHTML  =  "";
@@ -240,10 +254,11 @@ function clearFormatting(){
     document.getElementById('answerID').innerHTML  =  "";
     document.getElementById('answerID').classList.add("is-hidden");
     document.getElementById('info').classList.add("is-hidden");
+    document.getElementById('generateButton').classList.remove("is-disabled")
+    document.getElementById('generateButton').disabled=false;
 }
 
 function addFormatting(tokensArray){
-    console.log("ADD")
     for (let i = 0; i < 5; i++) {
         prob=100.0*tokensArray[i][1];
         var element=document.getElementById('result-word-'+(i+1))
@@ -286,9 +301,12 @@ function addFormatting(tokensArray){
     } else {
         document.getElementById('leftButtonAnswer').classList.remove("is-hidden","is-invisible");
     }
+    if(parsedHistory.attemptsRemaining<=0){
+        document.getElementById('generateButton').classList.add("is-disabled")
+        document.getElementById('generateButton').disabled=true;
+    }
 }
 function displayResults(animation=true,score){
-    console.log("DISPLAY")
     document.getElementById('results').style.display = 'block';
     const intv=500;
     // Simulate word predictions and score updates in the popup
@@ -333,6 +351,7 @@ function displayResults(animation=true,score){
         document.getElementById('score').innerHTML="score: "+Math.round(score*100)+" ["+Math.round(parsedHistory.bestScore*100)+"]";//"score: "+Math.round(score*100)+"<br>"+"best: "+Math.round(parsedHistory.bestScore*100);
         document.getElementById('score').classList.remove("is-hidden");
         document.getElementById('viewAnswer').classList.remove("is-hidden");
+        
     }
 }
 
@@ -354,9 +373,14 @@ document.getElementById('generateButton').addEventListener('click', async () => 
     const scoreDiv = document.getElementById('scoreID');
     const target1 = document.getElementById('targetWord1').innerHTML;
     const target2 = document.getElementById('targetWord2').innerHTML;
-
-    const x = atob('c2stcHJvai1IUExHVGdPVHlOZlpNNldwSUViSXpKNGxXTXFnVXNfRzRJcXhGQ3p6SEx3NGJMOFozVUJsSFQ1S1JuLXpnMEdLN3BGaXY4Y2NRNFQzQmxia0ZKLVBfVFc3Y1lnTWFxb3BONlJKbWo2LXZjQkdwQWhtQ1RkX0dNRXBLeEI0MVZGNEpOcG01dnphc0pJb19nZ2tkTVpsNHNnZmJjSUE=');
-    const chat_model = "gpt-4o-mini";//'gpt-3.5-turbo';
+    let x = 'c2stcHJvai1IUExHVGdPVHlOZlpNNldwSUViSXpKNGxXTXFnVXNfRzRJcXhGQ3p6SEx3NGJMOFozVUJsSFQ1S1JuLXpnMEdLN3BGaXY4Y2NRNFQzQmxia0ZKLVBfVFc3Y1lnTWFxb3BONlJKbWo2LXZjQkdwQWhtQ1RkX0dNRXBLeEI0MVZGNEpOcG01dnphc0pJb19nZ2tkTVpsNHNnZmJjSUE=';
+    if (localStorage.getItem('userID')=="016f370d-3a8a-491a-9e45-c5c93cc5727e"){ //emily phone
+        x = 'c2stcHJvai1DUTZqcGx2RV9GVUttX2swRy1HREFjWDZUMjRtMGdiUDBDN1RQSUt6STBSSlZzVmRqSUlKX3Y2TWVLVlRfUk56Q0NXOTRSWjk1UlQzQmxia0ZKSUx3VnRUZVJiQjBkUWJjajJUUHFLai0yWWF4R0l0cXJ1Nmd6QW1vcUdtTzF6cTEyMDdSenJWdEx6ZnVyVEctVmhuWjhYSnlFZ0E=';
+    } else if(localStorage.getItem('userID')=="11a0d75a-56ee-4e5a-91d9-b1e2f8ea9e5a"){//jeremy phone
+        x = 'c2stcHJvai1lYmVQZ3MwMlVMYVB2azBFVmNUTF9NNUVmcDhuVE41engzTEJxZnBBYUx5LWswNTlPTVBtMkRXNFZXVTdvSWZBYUtpbHZoQ3hVQVQzQmxia0ZKRXA2c3hvY1N3LTVtQXh5VlkyTWFwVW9WWm1wRXowSFJuT1lEUS1MM0FJajI5cjE0aWV0TWJBSE1qVkc0blNXeW9GVUpjWkpCZ0E=';
+    }
+    
+    const chat_model = "gpt-4o-mini-2024-07-18";//'gpt-3.5-turbo';
     const instruct_model = 'gpt-3.5-turbo-instruct';
     const max_tokens = 10;//+document.getElementById('maxTokens').value;//3;
     const num_return= 10;//+document.getElementById('numReturn').value;//20;
@@ -402,7 +426,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${x}`
+                    'Authorization': `Bearer ${atob(x)}`
                 },
                 body: JSON.stringify(b)
             });        

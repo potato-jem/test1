@@ -267,8 +267,12 @@ button:hover {
     margin-top: 20px;
     font-size: 16px;
     color: var(--text-color);
+    text-align: center; 
 }
-
+.viewedSolution {
+    background-color: var(--primary-color);
+    color: var(--game-container-color);
+}
 .start-hidden {
     display: none;
 }
@@ -278,6 +282,10 @@ button:hover {
 }
 .is-invisible {
     visibility: hidden;
+}
+.is-disabled{
+  pointer-events: none;
+  opacity: 0.5;
 }
 #info {
     font-size: 10px;
