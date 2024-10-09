@@ -355,7 +355,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
     const target1 = document.getElementById('targetWord1').innerHTML;
     const target2 = document.getElementById('targetWord2').innerHTML;
 
-    const x = atob('c2stcHJvai0zZDN5MWo5TDRaYVljVG1oTllmNlQzQmxia0ZKZUJNalpUQXZWMnRKM0tYWVA5MkM=');
+    const x = atob('c2stcHJvai1IUExHVGdPVHlOZlpNNldwSUViSXpKNGxXTXFnVXNfRzRJcXhGQ3p6SEx3NGJMOFozVUJsSFQ1S1JuLXpnMEdLN3BGaXY4Y2NRNFQzQmxia0ZKLVBfVFc3Y1lnTWFxb3BONlJKbWo2LXZjQkdwQWhtQ1RkX0dNRXBLeEI0MVZGNEpOcG01dnphc0pJb19nZ2tkTVpsNHNnZmJjSUE=');
     const chat_model = "gpt-4o-mini";//'gpt-3.5-turbo';
     const instruct_model = 'gpt-3.5-turbo-instruct';
     const max_tokens = 10;//+document.getElementById('maxTokens').value;//3;
