@@ -15,7 +15,7 @@
         </div>
 
         <div class="content">
-            <div class="instruction">
+            <div class="instruction" id="instructions">
                 <h2>Find the Context v1.03</h2>
                 <p>Create a sentence that makes the following two words the most likely next words:</p>
             </div>
@@ -74,12 +74,48 @@
                         </div>
                     </li>
                 </ul>
-                <p class="score" id="stars">
-                    <!-- <span id="scoreID"></span> -->
-                    <span id="star-1" class="star">&#9733;</span>
-                    <span id="star-2" class="star">&#9733;</span>
-                    <span id="star-3" class="star">&#9733;</span>
-                </p>
+                <div class="flexBox is-hidden" id="stars">
+                    <div class="streakBox">
+                        <table>
+                        <tr>
+                            <td>Streak</td>
+                            <td id="statStreak"></td>
+                        </tr>
+                        <tr>
+                            <td>Longest</td>
+                            <td id="statBestStreak"></td>
+                        </tr>
+                        <tr>
+                            <td>Total</td>
+                            <td id="statTotal"></td>
+                        </tr>
+                    </table>
+                        <!-- <span class="column">Streak:<br>Best:<br>Total:</span><span class="column">10<br>200<br>1000</span> -->
+                    </div>
+                    <span>
+                        <span class="score" >
+                            <!-- <span id="scoreID"></span> -->
+                            <span id="star-1" class="star">&#9733;</span>
+                            <span id="star-2" class="star">&#9733;</span>
+                            <span id="star-3" class="star">&#9733;</span>
+                        </span>
+                    </span>
+                    <div class="streakBox">                    
+                        <table>
+                            <tr>
+                                <td>★</td>
+                                <td id="statStar1"></td>
+                            </tr>
+                            <tr>
+                                <td>★★</td>
+                                <td id="statStar2"></td>
+                            </tr>
+                            <tr>
+                                <td>★★★</td>
+                                <td id="statStar3"></td>
+                            </tr>
+                        </table>
+                </div>
             </div>
 
             <div class="view-answer-container is-hidden" id="answerBox">
@@ -100,67 +136,5 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
     <!-- <script src="all_words.js" ></script> -->
     <script src="scripts.js" ></script>
-    <script>
-        let bestWords = ["", "", "", "", ""];
-        let bestScore = 0;
-
-        function updateBestWords(newWords) {
-            for (let i = 0; i < newWords.length; i++) {
-                if (bestWords[i] === "" || newWords[i] === bestWords[i]) {
-                    bestWords[i] = newWords[i];
-                }
-            }
-        }
-
-        function updateStars(score) {
-            for (let i = 1; i <= 3; i++) {
-                document.getElementById('star-' + i).classList.remove('filled', 'outline');
-                document.getElementById('popup-star-' + i).classList.remove('filled', 'outline');
-                if (i <= score) {
-                    document.getElementById('star-' + i).classList.add('filled');
-                    document.getElementById('popup-star-' + i).classList.add('filled');
-                } else {
-                    document.getElementById('star-' + i).classList.add('outline');
-                    document.getElementById('popup-star-' + i).classList.add('outline');
-                }
-            }
-        }
-
-        // function displayBestWords() {
-        //     for (let i = 0; i < bestWords.length; i++) {
-        //         document.querySelector(`#result-word-${i + 1} .best-word`).innerHtml = bestWords[i] ? bestWords[i] : "";
-        //     }
-        // }
-
-        document.getElementById("generateButton").onclick = function() {
-            // const newWords = ["pleasant", "hot", "good", "great", "warm"];
-            // const score = Math.floor(Math.random() * 4); // Random score for demonstration
-
-            // Update the best words and score
-            // updateBestWords(newWords);
-            // bestScore = Math.max(bestScore, score);
-
-            // Show popup immediately
-                
-
-            // Simulate star filling one by one
-            // setTimeout(function() {
-            //     document.getElementById('star-1').classList.add(score >= 1 ? 'filled' : 'outline');
-            // }, 5*intv);
-
-            // setTimeout(function() {
-            //     document.getElementById('star-2').classList.add(score >= 2 ? 'filled' : 'outline');
-            // }, 6*intv);
-
-            // setTimeout(function() {
-            //     document.getElementById('star-3').classList.add(score >= 3 ? 'filled' : 'outline');
-            //     document.getElementById('viewAnswer').style.display = 'block';
-            // }, 7*intv);
-
-            // Display the best words on the page
-            // displayBestWords();
-        };
-
-    </script>
 </body>
 </html>
