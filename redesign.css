@@ -133,6 +133,28 @@ textarea {
     min-width: 80px;
 }
 
+.streakBox{
+    display: flex;
+    justify-content: center; 
+    align-items: center;
+    margin-bottom: 0px;
+    max-width: 80px;
+    min-width: 80px;
+    font-size: 12px;
+    color: var(--text-color);
+    text-align: center;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+td:first-child {
+text-align: left;
+}
+td:last-child {
+text-align: right;
+}
+
 button {
     padding: 10px 20px;
     background-color: var(--element-color);
@@ -218,7 +240,7 @@ button:hover {
     display: flex;
     justify-content: center;
     text-align: center;
-    margin-top: 20px;
+    /* margin-top: 20px; */
     font-size: 24px;
 }
 
@@ -246,6 +268,10 @@ button:hover {
     display: flex;
     justify-content: space-between;
     margin-top: 20px;
+}
+.flexBox {
+    display: flex;
+    justify-content: space-between;
 }
 .answerBoxButton {
     min-width: 90px;
@@ -316,3 +342,7 @@ button:hover {
     opacity: 1;
     transition: opacity 0.5s ease;  /* Smooth fade-in */
 }
+
+/* .column{
+    padding: 5px;
+} */

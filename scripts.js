@@ -39,8 +39,25 @@ stale_id=""
 minDate=new Date(2024, 9, 8) //Month is zero indexed
 maxDate=todaysDate;
 maxAttempts=5;
-attemptsRemaining=maxAttempts;
 attemptId=1;
+if (!localStorage.getItem('scoreList')) {
+    // Set the value if it doesn't exist
+    let scoreFromParsedHistory=Object.keys(localStorage).filter(key => {
+        const date = new Date(key);
+        return !isNaN(date) &&date>minDate
+      }).map(key=>JSON.parse(localStorage.getItem(key)).bestScore);
+    localStorage.setItem('scoreList', JSON.stringify(scoreFromParsedHistory));
+    
+    let currentStreak=scoreFromParsedHistory.reverse().indexOf(0);
+    if(currentStreak==-1){
+        currentStreak=scoreFromParsedHistory.length
+    }
+    localStorage.setItem('streak', currentStreak);
+    localStorage.setItem('streakBest', currentStreak);
+} 
+
+scoreList=JSON.parse(localStorage.getItem('scoreList'));
+
 
 function setRandomWords(min,max) {
     let minI=all_words[2].findIndex((x)=>x>=min)
@@ -245,7 +262,7 @@ function clearFormatting(){
         document.getElementById('attemptNumber').classList.add("is-hidden");
     }
     document.getElementById('results').style.display = 'none';
-    document.getElementById('stars').style.display = 'none';
+    document.getElementById('stars').classList.add('is-hidden')//.style.display = 'none';
     document.getElementById('star-1').classList.remove('filled', 'outline');
     document.getElementById('star-2').classList.remove('filled', 'outline');
     document.getElementById('star-3').classList.remove('filled', 'outline');
@@ -331,10 +348,10 @@ function addFormatting(tokensArray){
     } else {
         document.getElementById('leftButtonAnswer').classList.remove("is-hidden","is-invisible");
     }
-    if(parsedHistory.attemptsRemaining<=0){
-        document.getElementById('generateButton').classList.add("is-disabled")
-        document.getElementById('generateButton').disabled=true;
-    }
+    // if(parsedHistory.attemptsRemaining<=0){
+    //     document.getElementById('generateButton').classList.add("is-disabled")
+    //     document.getElementById('generateButton').disabled=true;
+    // }
 }
 function displayResults(animation=true,score){
     document.getElementById('results').style.display = 'block';
@@ -353,7 +370,7 @@ function displayResults(animation=true,score){
                 }
         }
         setTimeout(function() {
-            document.getElementById('stars').style.display = 'block';
+            document.getElementById('stars').classList.remove("is-hidden");//style.display = 'block';
             document.getElementById('star-1').classList.add(getStars(score) >= 1 ? 'filled' : 'outline');
         }, c*intv);
 
@@ -366,7 +383,7 @@ function displayResults(animation=true,score){
             document.getElementById('score').innerHTML="score: "+Math.round(score*100)+"["+Math.round(parsedHistory.bestScore*100)+"]";
             document.getElementById('score').classList.remove("is-hidden");
             document.getElementById('answerBox').classList.remove("is-hidden");
-            
+            updateStats()
         }, (c+2)*intv);
     } else {
         for (let i = 0; i < 5; i++) {
@@ -375,13 +392,14 @@ function displayResults(animation=true,score){
                 element.classList.remove("is-hidden");
             }
         }
-        document.getElementById('stars').style.display = 'block';
+        document.getElementById('stars').classList.remove("is-hidden")//.style.display = 'block';
         document.getElementById('star-1').classList.add(getStars(score) >= 1 ? 'filled' : 'outline');
         document.getElementById('star-2').classList.add(getStars(score) >= 2 ? 'filled' : 'outline');
         document.getElementById('star-3').classList.add(getStars(score) >= 3 ? 'filled' : 'outline');
         document.getElementById('score').innerHTML="score: "+Math.round(score*100)+" ["+Math.round(parsedHistory.bestScore*100)+"]";//"score: "+Math.round(score*100)+"<br>"+"best: "+Math.round(parsedHistory.bestScore*100);
         document.getElementById('score').classList.remove("is-hidden");
         document.getElementById('answerBox').classList.remove("is-hidden");
+        updateStats()
         
     }
 }
@@ -402,7 +420,7 @@ function getScore(prob1, prob2, pos, contextLength, k = 25, j = 0.2, desiredMaxL
     const scoreBase = 1 / (1 + Math.exp(-k * (prob2 - j)));
     const lengthAdj = Math.exp(-Math.max(contextLength - desiredMaxLength, 0) * lengthWeight);
     const positionScore = (6.0-pos)/4.0
-    return 0.2*scoreBase*lengthAdj + 0.5*positionScore + 0.3*(prob1 + prob2) ;
+    return Math.max(0,0.2*scoreBase*lengthAdj + 0.5*positionScore + 0.3*(prob1 + prob2));
 }
 function getScore_original(prob2, contextLength, k = 25, j = 0.2, desiredMaxLength = 5, lengthWeight = 0.1) {
     const scoreBase = 1 / (1 + Math.exp(-k * (prob2 - j)));
@@ -579,14 +597,21 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             console.log(parsedHistory.allAttempts.at(existing_answer).result)
         } else {
             let [tokensArray,score,dbitem] = await getResponse(inputText,max_tokens,true);
-            db.collection("responses").add(dbitem)
             parsedHistory.attemptsMade += 1;
             attemptId=parsedHistory.attemptsMade;
-            parsedHistory.attemptsRemaining -=1;
-            if(parsedHistory.bestScore===null | score>parsedHistory.bestScore | parsedHistory.bestScore==0){
-                parsedHistory.bestScore=score
-                parsedHistory.bestPrompt=inputText;
-                parsedHistory.bestAttemptId=attemptId;
+            if(parsedHistory.attemptsRemaining>0){
+                if((parsedHistory.bestScore===null | score>parsedHistory.bestScore | parsedHistory.bestScore==0) ){
+                    parsedHistory.bestScore=score
+                    parsedHistory.bestPrompt=inputText;
+                    parsedHistory.bestAttemptId=attemptId;
+                    scoreList[selectedDate]=score
+                    localStorage.setItem("scoreList", JSON.stringify(scoreList));
+                }
+                db.collection("responses").add(dbitem)
+                parsedHistory.attemptsRemaining -=1;
+                updateStreak(score>0,selectedDate);
+            } else {
+                parsedHistory.attemptsRemaining -=1;
             }
             clearFormatting();
             addFormatting(tokensArray);
@@ -613,7 +638,8 @@ document.getElementById('generateButton').addEventListener('click', async () => 
         // }
 
     } catch (error) {
-        outputDiv.textContent = `Error: ${error.message}`;
+        console.log(error)
+        document.getElementById("instructions").textContent = `Error: ${error.message}`;
     }
 });
 
@@ -632,8 +658,8 @@ function generateShareString(attempt) {
     const starRating = '⭐'.repeat(stars) + '✩'.repeat(3 - stars);
     const initialWordString = attempt.prompt.split(/[\s+ ,.!?;:]+/)
     .map(part => { return '_'.repeat(Math.ceil(part.length/2.0));}).join(' ')
-    const breakAt = initialWordString.lastIndexOf(' ', 25);
-    const wordString = initialWordString.slice(0, breakAt) + "\n" + initialWordString.slice(breakAt + 1);
+    // const breakAt = initialWordString.lastIndexOf(' ', 25);
+    const wordString = initialWordString//initialWordString.slice(0, breakAt) + "\n" + initialWordString.slice(breakAt + 1);
     const setupString = '🟨 = '+ document.getElementById('targetWord1').innerText + '  🟪 = ' + document.getElementById('targetWord2').innerText
     const finalString = `${setupString}\n${wordString}\n\n${squares}\n${starRating}`;
     return(finalString)
@@ -651,4 +677,38 @@ function showPopup() {
     setTimeout(() => {
         popup.classList.remove('show'); 
     }, 2000);  // Popup will disappear after 2 seconds
+}
+
+function updateStreak(starEarned,selectedDate) {
+    // const today = new Date().toISOString().split('T')[0]; // Get today's date in 'YYYY-MM-DD' format
+    const lastDate = localStorage.getItem('streakLastDate');
+    const yesterdaysDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()-1);
+    let currentStreak = parseInt(localStorage.getItem('streak') || '0');
+    let doUpdateStreak=true;
+    if((selectedDate!==todaysDate) || (lastDate==todaysDate) ){
+        doUpdateStreak=false;
+    } else if(lastDate === null || lastDate<yesterdaysDate){
+        currentStreak = 1;
+    } else if(starEarned==false & parsedHistory.attemptsRemaining==0){
+        currentStreak = 1;
+    } else if(starEarned & lastDate==yesterdaysDate){
+        currentStreak++;
+    } else {
+        doUpdateStreak=false;
+    }
+    if(doUpdateStreak){
+        localStorage.setItem('streak', currentStreak);
+        localStorage.setItem('streakLastDate', todaysDate);
+        localStorage.setItem('streakBest', Math.max(currentStreak,parseInt(localStorage.getItem('streakBest') || '0')));
+    }
+}
+
+function updateStats(){
+    document.getElementById('statTotal').innerText=Object.keys(scoreList).length;
+    const starCounts=Object.entries(scoreList).map(([key, value]) => getStars(value));
+    document.getElementById('statStar1').innerText=starCounts.filter(num=>num==1).length
+    document.getElementById('statStar2').innerText=starCounts.filter(num=>num==2).length
+    document.getElementById('statStar3').innerText=starCounts.filter(num=>num==3).length
+    document.getElementById('statStreak').innerText=localStorage.getItem('streak');
+    document.getElementById('statBestStreak').innerText=localStorage.getItem('streakBest');
 }
