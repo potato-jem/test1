@@ -187,11 +187,11 @@ function viewAnswer(){
 document.getElementById('viewAnswer').addEventListener('click', async () => {
     viewAnswer()
 });
-document.getElementById('hideAnswer').addEventListener('click', async () => {
-    document.getElementById('answerID').innerHTML  =  "";
-    document.getElementById('answerID').classList.add("is-hidden");
-    document.getElementById('info').classList.add("is-hidden");
-});
+// document.getElementById('hideAnswer').addEventListener('click', async () => {
+//     document.getElementById('answerID').innerHTML  =  "";
+//     document.getElementById('answerID').classList.add("is-hidden");
+//     document.getElementById('info').classList.add("is-hidden");
+// });
 async function updateDocument(collectionName, documentId, updatedData) {
     try {
       const docRef = db.collection(collectionName).doc(documentId);
@@ -249,8 +249,9 @@ function clearFormatting(){
     document.getElementById('star-1').classList.remove('filled', 'outline');
     document.getElementById('star-2').classList.remove('filled', 'outline');
     document.getElementById('star-3').classList.remove('filled', 'outline');
-    document.getElementById('viewAnswer').classList.add("is-hidden");
+    document.getElementById('answerBox').classList.add("is-hidden");
     document.getElementById('viewAnswer').classList.remove("viewedSolution");
+
     document.getElementById('score').classList.add("is-hidden");
     document.getElementById('answerID').innerHTML  =  "";
     document.getElementById('answerID').classList.add("is-hidden");
@@ -260,34 +261,62 @@ function clearFormatting(){
 }
 
 function addFormatting(tokensArray){
-    for (let i = 0; i < 5; i++) {
-        prob=100.0*tokensArray[i][1];
-        var element=document.getElementById('result-word-'+(i+1))
-        if(prob>=1){
-            element.classList.add("found-word");
-            if(tokensArray[i][3].length>0){
-                element.querySelector('.new-word').innerHTML = "<span>"+tokensArray[i][2]+"</span>"
-                                                              +"<span style='opacity: 0.5'>"+tokensArray[i][3]+"</span>"
-            } else {
-               element.querySelector('.new-word').innerHTML = tokensArray[i][0]
-            }
-            element.querySelector('.result-bar').style.width = prob+'%'
-            if(tokensArray[i][4]){
-                element.classList.add("match-1");
-                element.querySelector('.new-word').classList.add("match-1-text");
-                element.querySelector('.result-bar').classList.add("match-1-bar");
-            }
-            if(tokensArray[i][5]){
-                element.classList.add("match-2");
-                element.querySelector('.new-word').classList.add("match-2-text");
-                element.querySelector('.result-bar').classList.add("match-2-bar");
-            }
 
-        } else {
-            element.classList.add("is-hidden");
-        }
-        
+    for (let i = 0; i < 5; i++) {
+        var element=document.getElementById('result-word-'+(i+1));
+        element.classList.add("is-hidden");
     }
+
+    filterResultArray(tokensArray).map(([fullWord, prob,token,remainder, isYellow, isPurple],index) => {
+        var element=document.getElementById('result-word-'+(index+1));
+        element.classList.add("found-word");
+        if(remainder>0){
+            element.querySelector('.new-word').innerHTML = "<span>"+token+"</span>"
+                                                          +"<span style='opacity: 0.5'>"+remainder+"</span>"
+        } else {
+           element.querySelector('.new-word').innerHTML = fullWord
+        }
+        element.querySelector('.result-bar').style.width = prob*100.0+'%'
+        if(isYellow){
+            element.classList.add("match-1");
+            element.querySelector('.new-word').classList.add("match-1-text");
+            element.querySelector('.result-bar').classList.add("match-1-bar");
+        }
+        if(isPurple){
+            element.classList.add("match-2");
+            element.querySelector('.new-word').classList.add("match-2-text");
+            element.querySelector('.result-bar').classList.add("match-2-bar");
+        }
+    }
+    )
+    // for (let i = 0; i < 5; i++) {
+    //     prob=100.0*tokensArray[i][1];
+    //     var element=document.getElementById('result-word-'+(i+1))
+    //     if(prob>=1){
+    //         element.classList.add("found-word");
+    //         if(tokensArray[i][3].length>0){
+    //             element.querySelector('.new-word').innerHTML = "<span>"+tokensArray[i][2]+"</span>"
+    //                                                           +"<span style='opacity: 0.5'>"+tokensArray[i][3]+"</span>"
+    //         } else {
+    //            element.querySelector('.new-word').innerHTML = tokensArray[i][0]
+    //         }
+    //         element.querySelector('.result-bar').style.width = prob+'%'
+    //         if(tokensArray[i][4]){
+    //             element.classList.add("match-1");
+    //             element.querySelector('.new-word').classList.add("match-1-text");
+    //             element.querySelector('.result-bar').classList.add("match-1-bar");
+    //         }
+    //         if(tokensArray[i][5]){
+    //             element.classList.add("match-2");
+    //             element.querySelector('.new-word').classList.add("match-2-text");
+    //             element.querySelector('.result-bar').classList.add("match-2-bar");
+    //         }
+
+    //     } else {
+    //         element.classList.add("is-hidden");
+    //     }
+        
+    // }
     document.getElementById('attemptNumber').classList.remove("is-hidden");
     document.getElementById('leftButtonAnswer').classList.remove("is-hidden");
     document.getElementById('rightButtonAnswer').classList.remove("is-hidden");
@@ -325,18 +354,19 @@ function displayResults(animation=true,score){
         }
         setTimeout(function() {
             document.getElementById('stars').style.display = 'block';
-            document.getElementById('star-1').classList.add(score > 0 ? 'filled' : 'outline');
+            document.getElementById('star-1').classList.add(getStars(score) >= 1 ? 'filled' : 'outline');
         }, c*intv);
 
         setTimeout(function() {
-            document.getElementById('star-2').classList.add(score >= 0.65 ? 'filled' : 'outline');
+            document.getElementById('star-2').classList.add(getStars(score) >= 2 ? 'filled' : 'outline');
         }, (c+1)*intv);
 
         setTimeout(function() {
-            document.getElementById('star-3').classList.add(score >= 0.85 ? 'filled' : 'outline');
+            document.getElementById('star-3').classList.add(getStars(score) >= 3 ? 'filled' : 'outline');
             document.getElementById('score').innerHTML="score: "+Math.round(score*100)+"["+Math.round(parsedHistory.bestScore*100)+"]";
             document.getElementById('score').classList.remove("is-hidden");
-            document.getElementById('viewAnswer').classList.remove("is-hidden");
+            document.getElementById('answerBox').classList.remove("is-hidden");
+            
         }, (c+2)*intv);
     } else {
         for (let i = 0; i < 5; i++) {
@@ -346,13 +376,25 @@ function displayResults(animation=true,score){
             }
         }
         document.getElementById('stars').style.display = 'block';
-        document.getElementById('star-1').classList.add(score > 0 ? 'filled' : 'outline');
-        document.getElementById('star-2').classList.add(score >= 0.2 ? 'filled' : 'outline');
-        document.getElementById('star-3').classList.add(score >= 0.7 ? 'filled' : 'outline');
+        document.getElementById('star-1').classList.add(getStars(score) >= 1 ? 'filled' : 'outline');
+        document.getElementById('star-2').classList.add(getStars(score) >= 2 ? 'filled' : 'outline');
+        document.getElementById('star-3').classList.add(getStars(score) >= 3 ? 'filled' : 'outline');
         document.getElementById('score').innerHTML="score: "+Math.round(score*100)+" ["+Math.round(parsedHistory.bestScore*100)+"]";//"score: "+Math.round(score*100)+"<br>"+"best: "+Math.round(parsedHistory.bestScore*100);
         document.getElementById('score').classList.remove("is-hidden");
-        document.getElementById('viewAnswer').classList.remove("is-hidden");
+        document.getElementById('answerBox').classList.remove("is-hidden");
         
+    }
+}
+
+function getStars(score){
+    if(score<=0){
+        return(0)
+    } else if (score<0.65){
+        return(1)
+    } else if(score<0.85){
+        return(2)
+    } else {
+        return(3)
     }
 }
 
@@ -575,3 +617,38 @@ document.getElementById('generateButton').addEventListener('click', async () => 
     }
 });
 
+function filterResultArray(arr){
+    return(arr.filter(([name, prob], index) => {
+        return 100.0*prob >= 1 && index <5}
+    ))
+}
+function generateShareString(attempt) {
+    const squares= filterResultArray(attempt.result).map(([name, prob,a,b, isYellow, isPurple],index) => {
+        const squares = Math.ceil(prob *10);
+        const color = isPurple ? '🟪' : isYellow ? '🟨' : '⬜';
+        return color.repeat(squares);
+    }).join('\n');
+    const stars=getStars(attempt.score)
+    const starRating = '⭐'.repeat(stars) + '✩'.repeat(3 - stars);
+    const initialWordString = attempt.prompt.split(/[\s+ ,.!?;:]+/)
+    .map(part => { return '_'.repeat(Math.ceil(part.length/2.0));}).join(' ')
+    const breakAt = initialWordString.lastIndexOf(' ', 25);
+    const wordString = initialWordString.slice(0, breakAt) + "\n" + initialWordString.slice(breakAt + 1);
+    const setupString = '🟨 = '+ document.getElementById('targetWord1').innerText + '  🟪 = ' + document.getElementById('targetWord2').innerText
+    const finalString = `${setupString}\n${wordString}\n\n${squares}\n${starRating}`;
+    return(finalString)
+}
+
+document.getElementById('shareAnswer').addEventListener('click', async () => {
+    shareString=generateShareString(parsedHistory.allAttempts[attemptId-1])
+    navigator.clipboard.writeText(shareString)
+    showPopup()
+});
+function showPopup() {
+    const popup = document.getElementById('popup');
+    popup.classList.add('show');
+
+    setTimeout(() => {
+        popup.classList.remove('show'); 
+    }, 2000);  // Popup will disappear after 2 seconds
+}

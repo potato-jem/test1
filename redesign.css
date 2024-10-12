@@ -244,8 +244,12 @@ button:hover {
 
 .view-answer-container {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     margin-top: 20px;
+}
+.answerBoxButton {
+    min-width: 90px;
+    max-width: 90px;
 }
 
 #view-answer {
@@ -292,4 +296,23 @@ button:hover {
     padding:10px;
     white-space: pre-wrap; 
     text-align: left; 
+}
+
+#popup {
+    visibility: hidden;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.5s ease, visibility 0s linear 0.5s;  /* Transition for opacity and delay visibility */
+}
+#popup.show {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.5s ease;  /* Smooth fade-in */
 }

@@ -82,11 +82,13 @@
                 </p>
             </div>
 
-            <div class="view-answer-container">
-                <button class="is-hidden" id="viewAnswer">View Solution</button>
-                <button id="hideAnswer" style="display: none;">Hide Solution</button>
+            <div class="view-answer-container is-hidden" id="answerBox">
+                <button class="answerBoxButton" id="otherAnswerButton"></button>
+                <button class="answerBoxButton" id="shareAnswer">Share</button>
+                <button class="answerBoxButton" id="viewAnswer">Solution</button>
+                <!-- <button id="hideAnswer" style="display: none;">Hide Solution</button> -->
             </div>
-
+            <div id="popup">Text copied to clipboard!</div>
             <div class="solution is-hidden" id="answerID"> </div>
             <div id="info" class="is-hidden"></div>
         </div>
