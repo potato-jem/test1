@@ -313,8 +313,8 @@ button:hover {
 .is-invisible {
     visibility: hidden;
 }
-.is-disabled{
-  pointer-events: none;
+.is-transparent{
+  /* pointer-events: none; */
   opacity: 0.5;
 }
 #info {

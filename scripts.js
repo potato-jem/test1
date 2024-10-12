@@ -196,8 +196,8 @@ function viewAnswer(){
     //parsedHistory.attemptsMade=maxAttempts;
     parsedHistory.attemptsRemaining=0;
     parsedHistory.solutionViewed=true;
-    document.getElementById('generateButton').classList.add("is-disabled")
-    document.getElementById('generateButton').disabled=true;
+    document.getElementById('generateButton').classList.add("is-transparent")
+    // document.getElementById('generateButton').disabled=true;
     localStorage.setItem(selectedDate, JSON.stringify(parsedHistory))
 }
 
@@ -273,8 +273,8 @@ function clearFormatting(){
     document.getElementById('answerID').innerHTML  =  "";
     document.getElementById('answerID').classList.add("is-hidden");
     document.getElementById('info').classList.add("is-hidden");
-    document.getElementById('generateButton').classList.remove("is-disabled")
-    document.getElementById('generateButton').disabled=false;
+    document.getElementById('generateButton').classList.remove("is-transparent")
+    // document.getElementById('generateButton').disabled=false;
 }
 
 function addFormatting(tokensArray){
@@ -348,10 +348,10 @@ function addFormatting(tokensArray){
     } else {
         document.getElementById('leftButtonAnswer').classList.remove("is-hidden","is-invisible");
     }
-    // if(parsedHistory.attemptsRemaining<=0){
-    //     document.getElementById('generateButton').classList.add("is-disabled")
-    //     document.getElementById('generateButton').disabled=true;
-    // }
+    if(parsedHistory.attemptsRemaining<=0){
+        document.getElementById('generateButton').classList.add("is-transparent")
+        // document.getElementById('generateButton').disabled=true;
+    }
 }
 function displayResults(animation=true,score){
     document.getElementById('results').style.display = 'block';
