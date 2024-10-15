@@ -732,7 +732,7 @@ function longestStreak(arr) {
 function updateStats(){
     let scores = getDatesBetween().map(key => JSON.parse(localStorage.getItem(key))?.bestScore??null);
     let streak=scores.slice(0, -1).reverse().findIndex(score => score === 0 || score === null)
-    let todays_history=localStorage.getItem(todaysDate)
+    let todays_history=JSON.parse(localStorage.getItem(todaysDate))
     let bestStreak=longestStreak(scores.slice(0, -1))
     if(todays_history.attemptsRemaining==0 &&  todays_history.bestScore==0){
         streak=0
