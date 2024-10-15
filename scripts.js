@@ -714,15 +714,34 @@ function showPopup() {
 //     }
 // }
 
+function longestStreak(arr) {
+    let maxStreak = 0, currentStreak = 0;
+
+    for (let num of arr) {
+        if (num > 0) {
+            currentStreak++;
+            maxStreak = Math.max(maxStreak, currentStreak);
+        } else {
+            currentStreak = 0;
+        }
+    }
+
+    return maxStreak;
+}
+
 function updateStats(){
     let scores = getDatesBetween().map(key => JSON.parse(localStorage.getItem(key))?.bestScore??null);
     let streak=scores.slice(0, -1).reverse().findIndex(score => score === 0 || score === null)
     let todays_history=localStorage.getItem(todaysDate)
+    let bestStreak=longestStreak(scores.slice(0, -1))
     if(todays_history.attemptsRemaining==0 &&  todays_history.bestScore==0){
         streak=0
     } else if(todays_history.bestScore==null) {
         streak=streak
     } else if(todays_history.bestScore>0){
+        if(bestStreak==streak){
+            bestStreak=bestStreak+1
+        }
         streak=streak+1
     }
 
@@ -732,5 +751,5 @@ function updateStats(){
     document.getElementById('statStar2').innerText=starCounts.filter(num=>num==2).length
     document.getElementById('statStar3').innerText=starCounts.filter(num=>num==3).length
     document.getElementById('statStreak').innerText=streak;
-    document.getElementById('statBestStreak').innerText=null//localStorage.getItem('streakBest');
+    document.getElementById('statBestStreak').innerText=bestStreak;//localStorage.getItem('streakBest');
 }
