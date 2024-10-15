@@ -143,6 +143,7 @@ textarea {
     font-size: 12px;
     color: var(--text-color);
     text-align: center;
+    opacity: 0.5;
 }
 table {
     border-collapse: collapse;

@@ -36,19 +36,13 @@ now = new Date();
 todaysDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 selectedDate = todaysDate;
 stale_id=""
-minDate=new Date(2024, 9, 8) //Month is zero indexed
+minDate=new Date(2024, 9, 10) //Month is zero indexed
 maxDate=todaysDate;
 maxAttempts=5;
 attemptId=1;
-function getDatesBetween(startDate=minDate,endDate=todaysDate) {
-    let dates = [];
-    let currentDate = new Date(startDate);
-    while (currentDate <= endDate) {
-        dates.push(new Date(currentDate));
-        currentDate.setDate(currentDate.getDate() + 1);
-    }
-    return dates;
-}
+
+getTodaysWords(dateToUse=selectedDate);
+
 
 
 // if (!localStorage.getItem('scoreList')) {
@@ -186,7 +180,6 @@ function getHistory(dateToUse,type="best",targets=[null,null],animation=false){
     } 
     
 }
-getTodaysWords(dateToUse=selectedDate);
 // function update
 
 //setRandomWords(+document.getElementById('minD').value,+document.getElementById('maxD').value);
@@ -272,8 +265,14 @@ function clearFormatting(){
         document.getElementById('rightButtonAnswer').classList.add("is-hidden");
         document.getElementById('attemptNumber').classList.add("is-hidden");
     }
+    document.getElementById('rightButton').classList.remove("is-invisible")
+    document.getElementById('leftButton').classList.remove("is-invisible")
+
+    if(selectedDate-todaysDate==0){document.getElementById('rightButton').classList.add("is-invisible")}
+    if(selectedDate-minDate==0){document.getElementById('leftButton').classList.add("is-invisible")}
     document.getElementById('results').style.display = 'none';
     document.getElementById('stars').classList.add('is-hidden')//.style.display = 'none';
+    Array.from(document.getElementsByClassName("streakBox")).forEach(element => {element.classList.add('is-invisible')});
     document.getElementById('star-1').classList.remove('filled', 'outline');
     document.getElementById('star-2').classList.remove('filled', 'outline');
     document.getElementById('star-3').classList.remove('filled', 'outline');
@@ -393,9 +392,13 @@ function displayResults(animation=true,score){
             document.getElementById('star-3').classList.add(getStars(score) >= 3 ? 'filled' : 'outline');
             document.getElementById('score').innerHTML="score: "+Math.round(score*100)+"["+Math.round(parsedHistory.bestScore*100)+"]";
             document.getElementById('score').classList.remove("is-hidden");
+        }, (c+2)*intv);
+        setTimeout(function() {
             document.getElementById('answerBox').classList.remove("is-hidden");
             updateStats()
-        }, (c+2)*intv);
+            Array.from(document.getElementsByClassName("streakBox")).forEach(element => {element.classList.remove('is-invisible')});
+        }, (c+4)*intv);
+
     } else {
         for (let i = 0; i < 5; i++) {
             var element = document.getElementById('result-word-'+(i+1));
@@ -410,6 +413,7 @@ function displayResults(animation=true,score){
         document.getElementById('score').innerHTML="score: "+Math.round(score*100)+" ["+Math.round(parsedHistory.bestScore*100)+"]";//"score: "+Math.round(score*100)+"<br>"+"best: "+Math.round(parsedHistory.bestScore*100);
         document.getElementById('score').classList.remove("is-hidden");
         document.getElementById('answerBox').classList.remove("is-hidden");
+        Array.from(document.getElementsByClassName("streakBox")).forEach(element => {element.classList.remove('is-invisible')});
         updateStats()
         
     }
@@ -728,28 +732,32 @@ function longestStreak(arr) {
 
     return maxStreak;
 }
-
-function updateStats(){
-    let scores = getDatesBetween().map(key => JSON.parse(localStorage.getItem(key))?.bestScore??null);
-    let streak=scores.slice(0, -1).reverse().findIndex(score => score === 0 || score === null)
-    let todays_history=JSON.parse(localStorage.getItem(todaysDate))
-    let bestStreak=longestStreak(scores.slice(0, -1))
-    if(todays_history.attemptsRemaining==0 &&  todays_history.bestScore==0){
-        streak=0
-    } else if(todays_history.bestScore==null) {
-        streak=streak
-    } else if(todays_history.bestScore>0){
-        if(bestStreak==streak){
-            bestStreak=bestStreak+1
-        }
-        streak=streak+1
+function getDatesBetween(startDate=minDate,endDate=todaysDate) {
+    let dates = [];
+    let currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+        dates.push(new Date(currentDate));
+        currentDate.setDate(currentDate.getDate() + 1);
     }
+    return dates;
+}
+function updateStats(){
+    let scoresWithoutToday = getDatesBetween().map(key => JSON.parse(localStorage.getItem(key))?.bestScore??null).slice(0, -1);
+    let scoresWithToday = scoresWithoutToday.slice()
+    let todays_history=JSON.parse(localStorage.getItem(todaysDate));
+    if(todays_history.attemptsRemaining==0 &&  todays_history.bestScore==0){
+        scoresWithToday.push(0)
+    } else if(todays_history.bestScore>0){
+        scoresWithToday.push(todays_history.bestScore)
+    }
+    const streak=scoresWithToday.reverse().findIndex(score => score === 0 || score === null)
+    const bestStreak=longestStreak(scoresWithToday)
+    const starCounts=scoresWithToday.filter(score=>score!==null).map(value => getStars(value));
 
-    document.getElementById('statTotal').innerText=scores.filter(score=>score!==null).length;
-    const starCounts=scores.filter(score=>score!==null).map(value => getStars(value));
+    document.getElementById('statTotal').innerText=scoresWithToday.filter(score=>score!==null).length;
+    document.getElementById('statStreak').innerText=streak;
+    document.getElementById('statBestStreak').innerText=bestStreak;
     document.getElementById('statStar1').innerText=starCounts.filter(num=>num==1).length
     document.getElementById('statStar2').innerText=starCounts.filter(num=>num==2).length
     document.getElementById('statStar3').innerText=starCounts.filter(num=>num==3).length
-    document.getElementById('statStreak').innerText=streak;
-    document.getElementById('statBestStreak').innerText=bestStreak;//localStorage.getItem('streakBest');
 }
