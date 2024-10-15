@@ -40,23 +40,34 @@ minDate=new Date(2024, 9, 8) //Month is zero indexed
 maxDate=todaysDate;
 maxAttempts=5;
 attemptId=1;
-if (!localStorage.getItem('scoreList')) {
-    // Set the value if it doesn't exist
-    let scoreFromParsedHistory=Object.keys(localStorage).filter(key => {
-        const date = new Date(key);
-        return !isNaN(date) &&date>minDate
-      }).map(key=>JSON.parse(localStorage.getItem(key)).bestScore);
-    localStorage.setItem('scoreList', JSON.stringify(scoreFromParsedHistory));
-    
-    let currentStreak=scoreFromParsedHistory.reverse().indexOf(0);
-    if(currentStreak==-1){
-        currentStreak=scoreFromParsedHistory.length
+function getDatesBetween(startDate=minDate,endDate=todaysDate) {
+    let dates = [];
+    let currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+        dates.push(new Date(currentDate));
+        currentDate.setDate(currentDate.getDate() + 1);
     }
-    localStorage.setItem('streak', currentStreak);
-    localStorage.setItem('streakBest', currentStreak);
-} 
+    return dates;
+}
 
-scoreList=JSON.parse(localStorage.getItem('scoreList'));
+
+// if (!localStorage.getItem('scoreList')) {
+//     // Set the value if it doesn't exist
+//     let scoreFromParsedHistory=Object.keys(localStorage).filter(key => {
+//         const date = new Date(key);
+//         return !isNaN(date) &&date>minDate
+//       }).map(key=>JSON.parse(localStorage.getItem(key)).bestScore);
+//     localStorage.setItem('scoreList', JSON.stringify(scoreFromParsedHistory));
+    
+//     let currentStreak=scoreFromParsedHistory.reverse().indexOf(0);
+//     if(currentStreak==-1){
+//         currentStreak=scoreFromParsedHistory.length
+//     }
+//     localStorage.setItem('streak', currentStreak);
+//     localStorage.setItem('streakBest', currentStreak);
+// } 
+
+// scoreList=JSON.parse(localStorage.getItem('scoreList'));
 
 
 function setRandomWords(min,max) {
@@ -604,12 +615,12 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                     parsedHistory.bestScore=score
                     parsedHistory.bestPrompt=inputText;
                     parsedHistory.bestAttemptId=attemptId;
-                    scoreList[selectedDate]=score
-                    localStorage.setItem("scoreList", JSON.stringify(scoreList));
+                    // scoreList[selectedDate]=score
+                    // localStorage.setItem("scoreList", JSON.stringify(scoreList));
                 }
                 db.collection("responses").add(dbitem)
                 parsedHistory.attemptsRemaining -=1;
-                updateStreak(score>0,selectedDate);
+                // updateStreak(score>0,selectedDate);
             } else {
                 parsedHistory.attemptsRemaining -=1;
             }
@@ -679,36 +690,47 @@ function showPopup() {
     }, 2000);  // Popup will disappear after 2 seconds
 }
 
-function updateStreak(starEarned,selectedDate) {
-    // const today = new Date().toISOString().split('T')[0]; // Get today's date in 'YYYY-MM-DD' format
-    const lastDate = localStorage.getItem('streakLastDate');
-    const yesterdaysDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()-1);
-    let currentStreak = parseInt(localStorage.getItem('streak') || '0');
-    let doUpdateStreak=true;
-    if((selectedDate!==todaysDate) || (lastDate==todaysDate) ){
-        doUpdateStreak=false;
-    } else if(lastDate === null || lastDate<yesterdaysDate){
-        currentStreak = 1;
-    } else if(starEarned==false & parsedHistory.attemptsRemaining==0){
-        currentStreak = 1;
-    } else if(starEarned & lastDate==yesterdaysDate){
-        currentStreak++;
-    } else {
-        doUpdateStreak=false;
-    }
-    if(doUpdateStreak){
-        localStorage.setItem('streak', currentStreak);
-        localStorage.setItem('streakLastDate', todaysDate);
-        localStorage.setItem('streakBest', Math.max(currentStreak,parseInt(localStorage.getItem('streakBest') || '0')));
-    }
-}
+// function updateStreak(starEarned,selectedDate) {
+//     // const today = new Date().toISOString().split('T')[0]; // Get today's date in 'YYYY-MM-DD' format
+//     const lastDate = localStorage.getItem('streakLastDate');
+//     const yesterdaysDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()-1);
+//     let currentStreak = parseInt(localStorage.getItem('streak') || '0');
+//     let doUpdateStreak=true;
+//     if((selectedDate!==todaysDate) || (lastDate==todaysDate) ){
+//         doUpdateStreak=false;
+//     } else if(lastDate === null || lastDate<yesterdaysDate){
+//         currentStreak = 1;
+//     } else if(starEarned==false & parsedHistory.attemptsRemaining==0){
+//         currentStreak = 1;
+//     } else if(starEarned & lastDate==yesterdaysDate){
+//         currentStreak++;
+//     } else {
+//         doUpdateStreak=false;
+//     }
+//     if(doUpdateStreak){
+//         localStorage.setItem('streak', currentStreak);
+//         localStorage.setItem('streakLastDate', todaysDate);
+//         localStorage.setItem('streakBest', Math.max(currentStreak,parseInt(localStorage.getItem('streakBest') || '0')));
+//     }
+// }
 
 function updateStats(){
-    document.getElementById('statTotal').innerText=Object.keys(scoreList).length;
-    const starCounts=Object.entries(scoreList).map(([key, value]) => getStars(value));
+    let scores = getDatesBetween().map(key => JSON.parse(localStorage.getItem(key))?.bestScore??null);
+    let streak=scores.slice(0, -1).reverse().findIndex(score => score === 0 || score === null)
+    let todays_history=localStorage.getItem(todaysDate)
+    if(todays_history.attemptsRemaining==0 &&  todays_history.bestScore==0){
+        streak=0
+    } else if(todays_history.bestScore==null) {
+        streak=streak
+    } else if(todays_history.bestScore>0){
+        streak=streak+1
+    }
+
+    document.getElementById('statTotal').innerText=scores.filter(score=>score!==null).length;
+    const starCounts=scores.filter(score=>score!==null).map(value => getStars(value));
     document.getElementById('statStar1').innerText=starCounts.filter(num=>num==1).length
     document.getElementById('statStar2').innerText=starCounts.filter(num=>num==2).length
     document.getElementById('statStar3').innerText=starCounts.filter(num=>num==3).length
-    document.getElementById('statStreak').innerText=localStorage.getItem('streak');
-    document.getElementById('statBestStreak').innerText=localStorage.getItem('streakBest');
+    document.getElementById('statStreak').innerText=streak;
+    document.getElementById('statBestStreak').innerText=null//localStorage.getItem('streakBest');
 }
