@@ -100,7 +100,7 @@ async function getTodaysWords(dateToUse=new Date(), env="PROD1"){
         chosen_item=await db.collection(collection).limit(1).get()
         if(chosen_item.size==0){
             collection="/targets/"+env+"/potential_items"
-            chosen_item=await db.collection(collection).limit(1).get()
+            chosen_item=await db.collection(collection).orderBy('__name__').limit(1).get()
             if(chosen_item.size==0){
                 console.log("No items found")
             }
