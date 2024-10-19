@@ -96,14 +96,20 @@ async function getTodaysWords(dateToUse=new Date(),viewer=false){
     }
     const formattedDate = new Intl.DateTimeFormat('en-CA').format(selectedDate);
 
+    const urlInfo = (new URL(window.location))
+    var url=urlInfo.origin
+    if(url=="file://"){
+        url=urlInfo.pathname
+    }
+    
     if(viewer){
     } else if(selectedDate-todaysDate==0){
-        const newUrl = (new URL(window.location)).pathname //+ (params.size>0?'?'+params.toString():'');
-        history.pushState(null, '', newUrl);
+        //const newUrl = url //+ (params.size>0?'?'+params.toString():'');
+        history.pushState(null, '', url);
     } else {
-        const newQuery = `?d=${formattedDate}`//'?'+[params.toString(),`d=${formattedDate}`].filter(str => str.length > 0).join('&')
-        const newUrl = (new URL(window.location)).pathname + newQuery;
-        history.pushState(null, '', newUrl);
+        //const newQuery = `?d=${formattedDate}`//'?'+[params.toString(),`d=${formattedDate}`].filter(str => str.length > 0).join('&')
+        //const newUrl = url + newQuery;
+        history.pushState(null, '', url + `?d=${formattedDate}`);
     }
 
     //todaysDate = new Intl.DateTimeFormat('en-CA').format(new Date());
@@ -731,7 +737,7 @@ function generateShareString(attempt) {
     // const breakAt = initialWordString.lastIndexOf(' ', 25);
     const wordString = initialWordString//initialWordString.slice(0, breakAt) + "\n" + initialWordString.slice(breakAt + 1);
     const setupString = '🟨 = '+ document.getElementById('targetWord1').innerText + '  🟪 = ' + document.getElementById('targetWord2').innerText
-    const linkString = (new URL(window.location)).pathname +`?v=${attempt.responseId}`
+    const linkString = (new URL(window.location)).origin +`?v=${attempt.responseId}`
     const finalString = `${setupString}\n${wordString}\n\n${squares}\n${starRating}\n\nSee prompt (potential spoilers!):\n${linkString}`;
     return(finalString)
 }
