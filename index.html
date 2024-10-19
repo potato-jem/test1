@@ -16,7 +16,7 @@
 
         <div class="content">
             <div class="instruction" id="instructions">
-                <h2>Find the Context v1.07</h2>
+                <h2>Find the Context v1.08</h2>
                 <p>Create a sentence that makes the following two words the most likely next words:</p>
             </div>
 
@@ -29,7 +29,7 @@
                 <textarea id="inputText" rows="4" placeholder="Type your sentence here..."></textarea>
             </div>
 
-            <div class="buttons">
+            <div class="buttons" id="buttonBar">
                 <div class="info">
                     <span class="little-score" id="score"></span>
                 </div>
@@ -123,6 +123,11 @@
                 <button class="answerBoxButton" id="shareAnswer">Share</button>
                 <button class="answerBoxButton" id="viewAnswer">Solution</button>
                 <!-- <button id="hideAnswer" style="display: none;">Hide Solution</button> -->
+            </div>
+            <div class="view-answer-container is-hidden" id="shareViewerBox">
+                <button class="answerBoxButton is-invisible" id="otherViewButton"></button>
+                <button class="answerBoxButton" id="playToday" onclick="window.location = window.location.pathname">Play</button>
+                <button class="answerBoxButton is-invisible" id="playThisDay"></button>
             </div>
             <div id="popup">Text copied to clipboard!</div>
             <div class="solution is-hidden" id="answerID"> </div>

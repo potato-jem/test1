@@ -34,14 +34,22 @@ const db = firebase.firestore();
 answer = ""
 now = new Date();
 todaysDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-selectedDate = todaysDate;
 stale_id=""
 minDate=new Date(2024, 9, 10) //Month is zero indexed
 maxDate=todaysDate;
 maxAttempts=5;
 attemptId=1;
+env="PROD1"
+params = new URLSearchParams(window.location.search);
 
-getTodaysWords(dateToUse=selectedDate);
+if(params.get('v')!==null){
+    viewSharedAnswer()
+} else if(params.get('d')!==null) {
+
+    getTodaysWords(dateToUse=params.get('d'));
+} else {
+    getTodaysWords(dateToUse=todaysDate);
+}
 
 
 
@@ -80,24 +88,42 @@ function setRandomWords(min,max) {
     return(out)
 }
 
-async function getTodaysWords(dateToUse=new Date(), env="PROD1"){
+async function getTodaysWords(dateToUse=new Date(),viewer=false){
+    if(typeof(dateToUse)=='string'){
+        selectedDate = new Date(dateToUse+"T00:00:00");
+    } else {
+        selectedDate=dateToUse
+    }
+    const formattedDate = new Intl.DateTimeFormat('en-CA').format(selectedDate);
+
+    if(viewer){
+    } else if(selectedDate-todaysDate==0){
+        const newUrl = (new URL(window.location)).pathname //+ (params.size>0?'?'+params.toString():'');
+        history.pushState(null, '', newUrl);
+    } else {
+        const newQuery = `?d=${formattedDate}`//'?'+[params.toString(),`d=${formattedDate}`].filter(str => str.length > 0).join('&')
+        const newUrl = (new URL(window.location)).pathname + newQuery;
+        history.pushState(null, '', newUrl);
+    }
+
     //todaysDate = new Intl.DateTimeFormat('en-CA').format(new Date());
     // const referenceDate = new Date('2024-08-20'); 
     // Convert the time difference from milliseconds to days
     //const dayDifference = Math.floor((currentDate - referenceDate) / (1000 * 60 * 60 * 24));
-    formattedDate=new Intl.DateTimeFormat('en-CA').format(dateToUse);
     document.getElementById('date').innerHTML=formattedDate;
     const docRef = db.collection("/targets/"+env+"/todays_word/").doc(formattedDate)
 
-    collection="/targets/"+env+"/reviewed_items"
-    selected_word = await docRef.get()
+    var collection="/targets/"+env+"/reviewed_items"
+    const selected_word = await docRef.get()
+    var data = null
+    var docId = null
     if (selected_word.exists) {
-        todays_word_item=selected_word.data()
+        const todays_word_item=selected_word.data()
         docId=todays_word_item.id;
-        chosen_item=await db.collection(todays_word_item.collection).doc(todays_word_item.id).get()
+        const chosen_item=await db.collection(todays_word_item.collection).doc(todays_word_item.id).get()
         data=chosen_item.data()
     } else {
-        chosen_item=await db.collection(collection).limit(1).get()
+        var chosen_item=await db.collection(collection).limit(1).get()
         if(chosen_item.size==0){
             collection="/targets/"+env+"/potential_items"
             chosen_item=await db.collection(collection).orderBy('__name__').limit(1).get()
@@ -112,23 +138,50 @@ async function getTodaysWords(dateToUse=new Date(), env="PROD1"){
         data.date=formattedDate;
         await db.collection("/targets/"+env+"/stale_items").doc(docId).set(data);
         await db.collection(collection).doc(docId).delete();;
-        todays_word_item={};
+        const todays_word_item={};
         todays_word_item.collection="/targets/"+env+"/stale_items"
         todays_word_item.date=new Date();
         todays_word_item.id=docId
         await docRef.set(todays_word_item);
     }
 
-        document.getElementById('targetWord1').innerHTML = data.target1.trim();
-        document.getElementById('targetWord2').innerHTML = data.target2.trim();
-       // document.getElementById('difficulty').value =  data.difficulty;
-        answer = data.answer;
-        stale_id=docId;
-        document.getElementById('info').innerHTML=JSON.stringify(data, null, 2);
+    document.getElementById('targetWord1').innerHTML = data.target1.trim();
+    document.getElementById('targetWord2').innerHTML = data.target2.trim();
+    // document.getElementById('difficulty').value =  data.difficulty;
+    answer = data.answer;
+    stale_id=docId;
+    document.getElementById('info').innerHTML=JSON.stringify(data, null, 2);
+    if(!viewer){
         getHistory(dateToUse,type="best",targets=[data.target1.trim(),data.target2.trim()],animation=false);
+    }
 }
 
-
+async function viewSharedAnswer(){
+    const viewerResponseId = params.get('v');
+    console.log(viewerResponseId)
+    const docRef = db.collection("responses").doc(viewerResponseId)
+    const response = await docRef.get()
+    const r = response.data()
+    const tokensArray = r.tokens.map((token, index) => [
+        token,
+        r.probs[index],
+        r.tokens_orig[index],
+        r.continue[index],
+        r.target1_match[index],
+        r.target2_match[index],
+      ]);
+    parsedHistory={
+        allAttempts:[]
+    }
+    getTodaysWords(dateToUse=new Date(r.todays_word_id.seconds*1000),viewer=true)
+    clearFormatting();
+    document.getElementById('inputText').value=r.input;
+    addFormatting(tokensArray);
+    displayResults(false,score= r.score,showStreakBox=false);
+    document.getElementById('buttonBar').classList.add("is-hidden")
+    document.getElementById('answerBox').classList.add("is-hidden")
+    document.getElementById('shareViewerBox').classList.remove("is-hidden")
+}
 function getHistory(dateToUse,type="best",targets=[null,null],animation=false){
 // Retrieve and parse the data from localStorage
     const storedHistory = localStorage.getItem(dateToUse);
@@ -178,7 +231,7 @@ function getHistory(dateToUse,type="best",targets=[null,null],animation=false){
     if(parsedHistory.solutionViewed==true){
         viewAnswer()
     } 
-    
+
 }
 // function update
 
@@ -225,8 +278,7 @@ async function updateDocument(collectionName, documentId, updatedData) {
 document.getElementById('leftButton').addEventListener('click', async () => {
     updatedDate=new Date(selectedDate.getTime() - 24 * 60 * 60 * 1000);
     if(updatedDate>=minDate){
-        selectedDate=updatedDate;
-        getTodaysWords(dateToUse=selectedDate);
+        getTodaysWords(dateToUse=updatedDate);
         }
     }
     
@@ -234,8 +286,7 @@ document.getElementById('leftButton').addEventListener('click', async () => {
 document.getElementById('rightButton').addEventListener('click', async () => {
     updatedDate=new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000);
     if(updatedDate<=maxDate){
-        selectedDate=updatedDate;
-        getTodaysWords(dateToUse=selectedDate);
+        getTodaysWords(dateToUse=updatedDate);
         }   
     }   
 )
@@ -277,8 +328,10 @@ function clearFormatting(){
     document.getElementById('star-2').classList.remove('filled', 'outline');
     document.getElementById('star-3').classList.remove('filled', 'outline');
     document.getElementById('answerBox').classList.add("is-hidden");
+    document.getElementById('shareViewerBox').classList.add("is-hidden");
+    document.getElementById('buttonBar').classList.remove("is-hidden")
     document.getElementById('viewAnswer').classList.remove("viewedSolution");
-
+    
     document.getElementById('score').classList.add("is-hidden");
     document.getElementById('answerID').innerHTML  =  "";
     document.getElementById('answerID').classList.add("is-hidden");
@@ -363,7 +416,7 @@ function addFormatting(tokensArray){
         // document.getElementById('generateButton').disabled=true;
     }
 }
-function displayResults(animation=true,score){
+function displayResults(animation=true,score,showStreakBox=true){
     document.getElementById('results').style.display = 'block';
     const intv=500;
     // Simulate word predictions and score updates in the popup
@@ -395,8 +448,10 @@ function displayResults(animation=true,score){
         }, (c+2)*intv);
         setTimeout(function() {
             document.getElementById('answerBox').classList.remove("is-hidden");
-            updateStats()
-            Array.from(document.getElementsByClassName("streakBox")).forEach(element => {element.classList.remove('is-invisible')});
+            if(showStreakBox){
+                updateStats()
+                Array.from(document.getElementsByClassName("streakBox")).forEach(element => {element.classList.remove('is-invisible')});
+            }
         }, (c+4)*intv);
 
     } else {
@@ -413,8 +468,10 @@ function displayResults(animation=true,score){
         document.getElementById('score').innerHTML="score: "+Math.round(score*100)+" ["+Math.round(parsedHistory.bestScore*100)+"]";//"score: "+Math.round(score*100)+"<br>"+"best: "+Math.round(parsedHistory.bestScore*100);
         document.getElementById('score').classList.remove("is-hidden");
         document.getElementById('answerBox').classList.remove("is-hidden");
-        Array.from(document.getElementsByClassName("streakBox")).forEach(element => {element.classList.remove('is-invisible')});
-        updateStats()
+        if(showStreakBox){
+            updateStats()
+            Array.from(document.getElementsByClassName("streakBox")).forEach(element => {element.classList.remove('is-invisible')});
+        }
         
     }
 }
@@ -586,11 +643,6 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                 continue: tokensArray.map(row => row[3]),
                 target1_match: tokensArray.map(row => row[4]),
                 target2_match: tokensArray.map(row => row[5]),
-                parameters: {"max_tokens":max_tokens,
-                    "num_return":num_return//,
-                    // "minD":+document.getElementById('minD').value,
-                    // "maxD":+document.getElementById('maxD').value
-                },
                 id: stale_id,
                 todays_word_id: todaysDate,
                 target1: target1,
@@ -614,6 +666,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             let [tokensArray,score,dbitem] = await getResponse(inputText,max_tokens,true);
             parsedHistory.attemptsMade += 1;
             attemptId=parsedHistory.attemptsMade;
+            var responseId = null
             if(parsedHistory.attemptsRemaining>0){
                 if((parsedHistory.bestScore===null | score>parsedHistory.bestScore | parsedHistory.bestScore==0) ){
                     parsedHistory.bestScore=score
@@ -622,7 +675,8 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                     // scoreList[selectedDate]=score
                     // localStorage.setItem("scoreList", JSON.stringify(scoreList));
                 }
-                db.collection("responses").add(dbitem)
+                var responseRef= await db.collection("responses").add(dbitem)
+                responseId = responseRef.id
                 parsedHistory.attemptsRemaining -=1;
                 // updateStreak(score>0,selectedDate);
             } else {
@@ -636,7 +690,8 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                 prompt: inputText,
                 sessionID: sessionStorage.getItem('sessionID'),
                 result: tokensArray,
-                score: score
+                score: score,
+                responseId: responseId
                 }
             )
             // attemptId+=1;
@@ -676,7 +731,8 @@ function generateShareString(attempt) {
     // const breakAt = initialWordString.lastIndexOf(' ', 25);
     const wordString = initialWordString//initialWordString.slice(0, breakAt) + "\n" + initialWordString.slice(breakAt + 1);
     const setupString = '🟨 = '+ document.getElementById('targetWord1').innerText + '  🟪 = ' + document.getElementById('targetWord2').innerText
-    const finalString = `${setupString}\n${wordString}\n\n${squares}\n${starRating}`;
+    const linkString = (new URL(window.location)).pathname +`?v=${attempt.responseId}`
+    const finalString = `${setupString}\n${wordString}\n\n${squares}\n${starRating}\n\nSee prompt (potential spoilers!):\n${linkString}`;
     return(finalString)
 }
 
