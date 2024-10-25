@@ -482,6 +482,15 @@ function displayResults(animation=true,score,showStreakBox=true){
     }
 }
 
+class CustomError extends Error {
+    constructor(message, type, code) {
+        super(message);        // Pass message to the parent Error class
+        this.name = "CustomError"; // Set the error name
+        this.type = type;       // Set a custom attribute
+        this.code = code;       // Set a custom attribute
+    }
+}
+
 function getStars(score){
     if(score<=0){
         return(0)
@@ -512,12 +521,9 @@ document.getElementById('generateButton').addEventListener('click', async () => 
     const scoreDiv = document.getElementById('scoreID');
     const target1 = document.getElementById('targetWord1').innerHTML;
     const target2 = document.getElementById('targetWord2').innerHTML;
-    let x = 'c2stcHJvai1IUExHVGdPVHlOZlpNNldwSUViSXpKNGxXTXFnVXNfRzRJcXhGQ3p6SEx3NGJMOFozVUJsSFQ1S1JuLXpnMEdLN3BGaXY4Y2NRNFQzQmxia0ZKLVBfVFc3Y1lnTWFxb3BONlJKbWo2LXZjQkdwQWhtQ1RkX0dNRXBLeEI0MVZGNEpOcG01dnphc0pJb19nZ2tkTVpsNHNnZmJjSUE=';
-    if (localStorage.getItem('userID')=="016f370d-3a8a-491a-9e45-c5c93cc5727e"){ //emily phone
-        x = 'c2stcHJvai1DUTZqcGx2RV9GVUttX2swRy1HREFjWDZUMjRtMGdiUDBDN1RQSUt6STBSSlZzVmRqSUlKX3Y2TWVLVlRfUk56Q0NXOTRSWjk1UlQzQmxia0ZKSUx3VnRUZVJiQjBkUWJjajJUUHFLai0yWWF4R0l0cXJ1Nmd6QW1vcUdtTzF6cTEyMDdSenJWdEx6ZnVyVEctVmhuWjhYSnlFZ0E=';
-    } else if(localStorage.getItem('userID')=="11a0d75a-56ee-4e5a-91d9-b1e2f8ea9e5a"){//jeremy phone
-        x = 'c2stcHJvai1lYmVQZ3MwMlVMYVB2azBFVmNUTF9NNUVmcDhuVE41engzTEJxZnBBYUx5LWswNTlPTVBtMkRXNFZXVTdvSWZBYUtpbHZoQ3hVQVQzQmxia0ZKRXA2c3hvY1N3LTVtQXh5VlkyTWFwVW9WWm1wRXowSFJuT1lEUS1MM0FJajI5cjE0aWV0TWJBSE1qVkc0blNXeW9GVUpjWkpCZ0E=';
-    }
+    // if (localStorage.getItem('userID')=="016f370d-3a8a-491a-9e45-c5c93cc5727e"){ //emily phone
+    // } else if(localStorage.getItem('userID')=="11a0d75a-56ee-4e5a-91d9-b1e2f8ea9e5a"){//jeremy phone
+    // }
     
     const chat_model = "gpt-4o-mini-2024-07-18";//'gpt-3.5-turbo';
     const instruct_model = 'gpt-3.5-turbo-instruct';
@@ -565,12 +571,15 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${atob(x)}`
+                    'Authorization': `Bearer ${localStorage.getItem("apiKey")}`
                 },
                 body: JSON.stringify(b)
             });        
             const data = await response.json();
             console.log(data);
+            if(data.hasOwnProperty("error")){
+                throw new CustomError(data.error.message,data.error.type,data.error.code);
+            }
             let tokens =[];
             let first_content='';
             let first_token=0;
@@ -640,6 +649,7 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                 timestamp: Date.now(),
                 userID: localStorage.getItem('userID'),
                 sessionID: sessionStorage.getItem('sessionID'),
+                email: localStorage.getItem("email"),
                 device:navigator.userAgent.match(/\(([^)]+)\)/)[1],
                 input: chattext,
                 score: score,
@@ -713,9 +723,16 @@ document.getElementById('generateButton').addEventListener('click', async () => 
         //     outputDiv2.innerHTML = tokensArray2.map(getFormattedText).join('\n');
         // }
 
-    } catch (error) {
-        console.log(error)
-        document.getElementById("instructions").textContent = `Error: ${error.message}`;
+    } catch (err) {
+        console.log(err)
+        err_message=`\nError: ${err.type} (${err.code}). \n\n${err.message}\n\n`;
+        if (err.code=="invalid_api_key"){
+            document.getElementById("errorMessagePopup").innerText = err_message;
+            localStorage.removeItem("apiKey");
+            updateUserInfo()
+        } else {
+            document.getElementById("instructions").innerText = err_message;
+        }
     }
 });
 
@@ -822,4 +839,40 @@ function updateStats(){
     document.getElementById('statStar1').innerText=starCounts.filter(num=>num==1).length
     document.getElementById('statStar2').innerText=starCounts.filter(num=>num==2).length
     document.getElementById('statStar3').innerText=starCounts.filter(num=>num==3).length
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    if (!localStorage.getItem("apiKey")) {
+        document.getElementById("apiKeyModal").style.display = "flex";
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    updateUserInfo()
+});
+
+function updateUserInfo(){
+    if (!localStorage.getItem("apiKey") || !localStorage.getItem("email")) {
+        document.getElementById("apiKeyModal").style.display = "flex";
+    } 
+    if(localStorage.getItem("email")){
+        document.getElementById("emailInput").value = localStorage.getItem("email");
+    }
+    if(localStorage.getItem("apiKey")){
+        document.getElementById("apiKeyInput").value = localStorage.getItem("apiKey");
+    }
+}
+
+function saveUserInfo() {
+    const email = document.getElementById("emailInput").value;
+    const apiKey = document.getElementById("apiKeyInput").value;
+
+    if (email && apiKey) {
+        localStorage.setItem("email", email);
+        localStorage.setItem("apiKey", apiKey);
+        document.getElementById("apiKeyModal").style.display = "none";
+    } else {
+        alert("Please fill out both fields.");
+    }
 }

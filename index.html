@@ -8,6 +8,15 @@
 </head>
 <body>
     <div class="game-container">
+        <div id="apiKeyModal">
+            <div id="modalContent">
+                <p>Please enter your details:</p>
+                <p id="errorMessagePopup"></p>
+                <input type="email" id="emailInput" placeholder="Email" required><br><br>
+                <input type="text" id="apiKeyInput" placeholder="API Key" required><br><br>
+                <button onclick="saveUserInfo()">Save</button>
+            </div>
+        </div>
         <div class="header">
             <span class="arrow" id="leftButton">&lt;</span>
             <span class="date" id="date"></span>
