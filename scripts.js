@@ -585,7 +585,11 @@ document.getElementById('generateButton').addEventListener('click', async () => 
             let first_token=0;
             if(chat){
                 //const firstFollow = data.choices[0].message.content.trim();
-                tokens = data.choices[0].logprobs.content[0].top_logprobs;
+                if((data.choices[0].logprobs.content).length>0){
+                    tokens = data.choices[0].logprobs.content[0].top_logprobs;
+                } else {
+                    tokens =[];
+                }
                 tokens=tokens.map(item=>[item.token,item.logprob])
                 first_content=data.choices[0].message.content;
             } else {
@@ -617,7 +621,11 @@ document.getElementById('generateButton').addEventListener('click', async () => 
                     
                     if((target1.startsWith(keyt) || target2.startsWith(keyt)) && !(keyt.startsWith(target1) || keyt.startsWith(target2)) && keyt.length>0 && iteration==false && content==''){
                         let [iteratedTokensArray,score,dbitem] = await getResponse(chattext+" "+keyt,max_tokens,chat,num_logprobs,true);//,extra_message=key
-                        content=iteratedTokensArray[0][3]
+                        if(iteratedTokensArray.length>0){
+                            content=iteratedTokensArray[0][3]
+                        } else {
+                            content=''
+                        }
                     }
                     word_content=content.split(' ')[0]
                     word=keyt+word_content
